@@ -2,12 +2,20 @@ import pandas as pd
 from flask import Flask
 from flask_cors import CORS
 from cryptocmd import CmcScraper
-# import json
+import yfinance as yf
+import json
 
 app = Flask(__name__)
 # cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
 
 CORS(app)
+
+cryptocurrencies_db = [
+    {"ticker": "BTC-USD", "base": "BTC", "quote": "USD"},
+    {"ticker": "ETH-USD", "base": "ETH", "quote": "USD"},
+    {"ticker": "XRP-USD", "base": "XRP", "quote": "USD"},
+    {"ticker": "EURUSD=X", "base": "EUR", "quote": "USD"}
+]
 
 
 @app.route('/')
@@ -39,6 +47,25 @@ def crypto_series():
 
     df = df.rename(columns={"Open": "open", "High": "high", "Low": "low", "Close": "close",
                             "Date": "date", "Volume": "volume", "Market Cap": "capitalization"})
+
+    result = df.to_json(orient="table")
+
+    return result
+
+
+@app.route('/cryptocurrencies')
+def cryptocurrencies():
+    return json.dumps(cryptocurrencies_db)
+
+
+@app.route('/cryptocurrencies/<ticker>')
+def cryptocurrencies_series(ticker):
+    df = yf.download(ticker, start='2022-05-01')
+
+    df = df.rename(columns={"Open": "open", "High": "high", "Low": "low", "Close": "close",
+                            "Volume": "volume", "Adj Close": "adjusted_close"})
+
+    df.index.names = ['date']
 
     result = df.to_json(orient="table")
 
