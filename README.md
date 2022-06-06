@@ -33,3 +33,19 @@ Deactivate the virtual environment:
 ```
 deactivate
 ```
+
+## Quant API Server
+
+Run locally:
+
+```
+FLASK_ENV=development MONGO_CONNECTION_STRING=<mongo-conn-string> python -m app
+```
+
+## ETL scripts
+
+Load the crypto histories into the database:
+
+```
+MONGO_CONNECTION_STRING=<mongo-conn-string> python ./etl/load_crypto_histories.py
+```

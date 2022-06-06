@@ -1,15 +1,25 @@
-import pandas as pd
+import os
+import json
+from pymongo import MongoClient
 from flask import Flask
 from flask_cors import CORS
+import pandas as pd
 from cryptocmd import CmcScraper
 import yfinance as yf
-import json
+
+import coinfolio_quant.cryptocurrencies as cryptocurrenciesDB
+
+MONGO_CONNECTION_STRING = os.environ["MONGO_CONNECTION_STRING"]
+
+client = MongoClient(MONGO_CONNECTION_STRING)
+database = client["coinfolio_prod"]
 
 app = Flask(__name__)
-# cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
 
 CORS(app)
 
+
+# TODO deprecate, should come from etl/database
 cryptocurrencies_db = [
     {"ticker": "BTC-USD", "base": "BTC", "quote": "USD"},
     {"ticker": "ETH-USD", "base": "ETH", "quote": "USD"},
@@ -18,6 +28,7 @@ cryptocurrencies_db = [
 ]
 
 
+# TODO deprecate
 @app.route('/')
 def home():
     df = pd.DataFrame(
@@ -29,6 +40,8 @@ def home():
     result = df.to_json(orient="table")
     return result
 
+# TODO deprecate
+
 
 @app.route('/series')
 def some_example_series():
@@ -39,6 +52,7 @@ def some_example_series():
     return result
 
 
+# TODO deprecate, bzw. integrate market cap into etl eventually...
 @app.route('/cryptoseries')
 def crypto_series():
 
@@ -55,19 +69,16 @@ def crypto_series():
 
 @app.route('/cryptocurrencies')
 def cryptocurrencies():
-    return json.dumps(cryptocurrencies_db)
+    cryptocurrencies_overview = cryptocurrenciesDB.get_overview(database)
+    return json.dumps(cryptocurrencies_overview)
 
 
 @app.route('/cryptocurrencies/<ticker>')
-def cryptocurrencies_series(ticker):
-    df = yf.download(ticker, start='2022-05-01')
+def cryptocurrency_series(ticker):
+    cryptocurrency_df = cryptocurrenciesDB.get_cryptocurrency_dataframe(
+        database, ticker=ticker)
 
-    df = df.rename(columns={"Open": "open", "High": "high", "Low": "low", "Close": "close",
-                            "Volume": "volume", "Adj Close": "adjusted_close"})
-
-    df.index.names = ['date']
-
-    result = df.to_json(orient="table")
+    result = cryptocurrency_df.to_json(orient="table")
 
     return result
 
