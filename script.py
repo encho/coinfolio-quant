@@ -8,9 +8,21 @@ MONGO_CONNECTION_STRING = os.environ["MONGO_CONNECTION_STRING"]
 client = MongoClient(MONGO_CONNECTION_STRING)
 database = client["coinfolio_prod"]
 
-print("===== the script =====")
 
-ohlc_df = crypto.get_cryptocurrency_dataframe(
-    database, ticker="BTC-USD")
+result = database.cryptocurrency_quotes.aggregate(
+    [
+        {
+            "$group":
+            {
+                "_id": "$ticker",
+                "min_date": {"$min": "$date"},
+                "max_date": {"$max": "$date"},
+            }
+        }
+    ]
+)
 
-print(ohlc_df.head())
+data = [{"ticker": it["_id"], "min_date": it["min_date"],
+         "max_date": it["max_date"]} for it in result]
+
+print(data)

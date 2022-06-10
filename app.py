@@ -4,6 +4,8 @@ from pymongo import MongoClient
 from flask import Flask
 from flask_cors import CORS
 from cryptocmd import CmcScraper
+import datetime
+
 
 import coinfolio_quant.datalake.cryptocurrencies as cryptocurrenciesDB
 
@@ -17,7 +19,11 @@ app = Flask(__name__)
 CORS(app)
 
 
-# TODO deprecate
+def default(o):
+    if isinstance(o, (datetime.date, datetime.datetime)):
+        return o.isoformat()
+
+
 @app.route('/')
 def home():
     return "Coinfolio Quant API"
@@ -26,7 +32,7 @@ def home():
 @app.route('/cryptocurrencies')
 def cryptocurrencies():
     cryptocurrencies_overview = cryptocurrenciesDB.get_overview(database)
-    return json.dumps(cryptocurrencies_overview)
+    return json.dumps(cryptocurrencies_overview, default=default)
 
 
 @app.route('/cryptocurrencies/<ticker>')
