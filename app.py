@@ -8,6 +8,7 @@ import datetime
 
 
 import coinfolio_quant.datalake.cryptocurrencies as cryptocurrenciesDB
+import coinfolio_quant.datalake.strategies as strategiesDB
 
 MONGO_CONNECTION_STRING = os.environ["MONGO_CONNECTION_STRING"]
 
@@ -27,6 +28,18 @@ def default(o):
 @app.route('/')
 def home():
     return "Coinfolio Quant API"
+
+
+@app.route('/strategies')
+def get_strategies():
+    strategies_overview = strategiesDB.get_overview(database)
+    return json.dumps(strategies_overview, default=default)
+
+
+@app.route('/strategies/<ticker>')
+def get_strategy(ticker):
+    strategy_info = strategiesDB.get_strategy_info(database, ticker)
+    return json.dumps(strategy_info, default=default)
 
 
 @app.route('/cryptocurrencies')
