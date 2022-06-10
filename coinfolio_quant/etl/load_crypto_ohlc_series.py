@@ -1,17 +1,8 @@
 import yfinance as yf
-from pymongo import MongoClient
 import progressbar
-import etl
 
 
-# TODO eventually close connection at end of script
-client = MongoClient(etl.MONGO_CONNECTION_STRING)
-database = client["coinfolio_prod"]
-cryptocurrency_quotes_collection = database["cryptocurrency_quotes"]
-cryptocurrency_quotes_collection.drop()
-
-
-def load_crypto_ohlc_series(ohlc_quotes_collection, cryptocurrency, start_date):
+def run(ohlc_quotes_collection, cryptocurrency, start_date):
 
     ticker = cryptocurrency["ticker"]
 
@@ -22,13 +13,21 @@ def load_crypto_ohlc_series(ohlc_quotes_collection, cryptocurrency, start_date):
                             "Volume": "volume", "Adj Close": "adjusted_close"})
     df.index.names = ['date']
 
+    df["percentage_change"] = (df['close'] /
+                               df['close'].shift(1) - 1).fillna(0)
+
+    df["adjusted_percentage_change"] = (df["adjusted_close"] /
+                                        df["adjusted_close"].shift(1) - 1).fillna(0)
+
     total_rows = len(df)
     current_row = 0
 
     bar = progressbar.ProgressBar(maxval=total_rows, widgets=[
-                                  progressbar.Bar('=', '[', ']'), ' ', progressbar.Percentage()])
+        progressbar.Bar('=', '[', ']'), ' ', progressbar.Percentage()])
 
     bar.start()
+
+    print(df.head())
 
     for index, row in df.iterrows():
 
@@ -41,6 +40,8 @@ def load_crypto_ohlc_series(ohlc_quotes_collection, cryptocurrency, start_date):
             "close": row.close,
             "volume": row.volume,
             "adjusted_close": row.adjusted_close,
+            "percentage_change": row.percentage_change,
+            "adjusted_percentage_change": row.adjusted_percentage_change,
         }
         ohlc_quotes_collection.insert_one(record)
 
@@ -48,10 +49,3 @@ def load_crypto_ohlc_series(ohlc_quotes_collection, cryptocurrency, start_date):
         bar.update(current_row)
 
     bar.finish()
-
-
-for cryptocurrency in etl.CRYPTOCURRENCIES:
-    load_crypto_ohlc_series(
-        cryptocurrency_quotes_collection, cryptocurrency, etl.START_DATE)
-
-client.close()
