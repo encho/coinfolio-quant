@@ -1,20 +1,14 @@
 import pandas as pd
 
 
+TEST = "ENCHOOOOOOO"
+
+
 def get_overview(database):
     cryptocurrency_quotes_collection = database["cryptocurrency_quotes"]
     print(cryptocurrency_quotes_collection)
 
     tickers = cryptocurrency_quotes_collection.distinct("ticker")
-
-    # return [
-    #     {"ticker": "heheheeheh", "min_date": "hello",
-    #         "max_date": "heheheeh", "nr_records": 500},
-    #     {"ticker": "heheheeheh", "min_date": "hello",
-    #         "max_date": "heheheeh", "nr_records": 500},
-    # ]
-
-    # return {"tickers": tickers}
 
     overview_table = list(map(lambda ticker: {"ticker": ticker}, tickers))
 

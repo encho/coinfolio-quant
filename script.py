@@ -1,32 +1,16 @@
+import os
+from pymongo import MongoClient
 import pandas as pd
-from cryptocmd import CmcScraper
-import json
-import yfinance as yf
+import coinfolio_quant.datalake.cryptocurrencies as crypto
 
+MONGO_CONNECTION_STRING = os.environ["MONGO_CONNECTION_STRING"]
 
-cryptocurrencies_db = [
-    {"ticker": "BTC-USD", "base": "BTC", "quote": "USD"},
-    {"ticker": "ETH-USD", "base": "ETH", "quote": "USD"},
-    {"ticker": "XRP-USD", "base": "XRP", "quote": "USD"},
-]
+client = MongoClient(MONGO_CONNECTION_STRING)
+database = client["coinfolio_prod"]
 
+print("===== the script =====")
 
-print("helloooo")
+ohlc_df = crypto.get_cryptocurrency_dataframe(
+    database, ticker="BTC-USD")
 
-# data = yf.download("EURUSD=X", start='2022-05-01')
-
-df = yf.download("EURUSD=X", start='2022-05-01')
-
-df = df.rename(columns={"Open": "open", "High": "high", "Low": "low", "Close": "close",
-                        "Date": "date", "Volume": "volume", "Adj Close": "adjusted_close"})
-
-df.index.names = ['date']
-
-print(df.head())
-
-result = df.to_json(orient="table")
-
-print(result)
-
-# if __name__ == '__main__':
-#     app.run()
+print(ohlc_df.head())
