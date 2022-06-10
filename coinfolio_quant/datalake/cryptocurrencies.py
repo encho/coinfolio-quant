@@ -1,16 +1,25 @@
 import pandas as pd
 
 
-TEST = "ENCHOOOOOOO"
-
-
 def get_overview(database):
     cryptocurrency_quotes_collection = database["cryptocurrency_quotes"]
     print(cryptocurrency_quotes_collection)
 
-    tickers = cryptocurrency_quotes_collection.distinct("ticker")
+    result = database.cryptocurrency_quotes.aggregate(
+        [
+            {
+                "$group":
+                {
+                    "_id": "$ticker",
+                    "min_date": {"$min": "$date"},
+                    "max_date": {"$max": "$date"},
+                }
+            }
+        ]
+    )
 
-    overview_table = list(map(lambda ticker: {"ticker": ticker}, tickers))
+    overview_table = [{"ticker": it["_id"], "min_date": it["min_date"],
+                       "max_date": it["max_date"]} for it in result]
 
     return overview_table
 
