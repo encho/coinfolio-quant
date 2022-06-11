@@ -42,6 +42,13 @@ def get_strategy(ticker):
     return json.dumps(strategy_info, default=default)
 
 
+@app.route('/strategies/series/weights/<ticker>')
+def get_strategy_weights_series(ticker):
+    strategy_weights_series = strategiesDB.get_strategy_weights_series(
+        database, ticker)
+    return json.dumps(strategy_weights_series, default=default)
+
+
 @app.route('/cryptocurrencies')
 def cryptocurrencies():
     cryptocurrencies_overview = cryptocurrenciesDB.get_overview(database)
