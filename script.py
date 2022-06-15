@@ -252,59 +252,6 @@ test_transactions = [{"type": "TRADE", "side": "BUY", "value": 100}, {
 assert(get_transactions_cash_flow(test_transactions) == -60)
 
 
-# def update_position(position, transaction):
-#     # in case the transaction is not a trade, return position
-#     if transaction["type"] != "TRADE":
-#         return position
-#     # in case the transaction is not on the position instrument, return position
-#     elif transaction["ticker"] != position["ticker"]:
-#         return position
-
-#     quantity_multiplier = 1 if transaction["side"] == "BUY" else -1
-#     old_position_value = position["quantity"] * position["average_price"]
-#     new_position_value = transaction["quantity"] * transaction["price"]
-#         "quantity": position["quantity"] + quantity_multiplier * transaction["quantity"],
-
-
-#     new_position = {
-#         "ticker": position["ticker"],
-#         # TODO rename quantity to quantity in positions everywhere!
-#         "quantity": position["quantity"] + quantity_multiplier * transaction["quantity"],
-#         "average_price": position["quantity"] *
-#     }
-
-#     return 99
-
-
-# test_position = {"ticker": "BTC"}
-# test_transaction = {"ticker": "BTCx"}
-# test_update_position = update_position(test_position, test_transaction)
-# print("UUUUUUUUUUUUUUUUUUU updated position UUUUUUUUUUUUUUUUUUUUUUU")
-# pprint(test_update_position)
-
-
-# def find_position_or_none(positions, ticker):
-#     filtered_items = list(filter(lambda p: p["ticker"] == ticker, positions))
-
-#     if len(filtered_items) > 1:
-#         raise Exception(
-#             "Could not find exaclty one match for the predicate.")
-
-#     if len(filtered_items) == 1:
-#         return filtered_items[0]
-
-#     return None
-
-
-# test_positions = [{"ticker": "BTC"}, {"ticker": "ETH"}]
-# test_found_positon = find_position_or_none(test_positions, "ETH")
-# assert(test_found_positon == {"ticker": "ETH"})
-
-# test_positions = [{"ticker": "BTC"}, {"ticker": "ETH"}]
-# test_found_positon = find_position_or_none(test_positions, "ZZZ")
-# assert(test_found_positon == None)
-
-
 def has_ticker(positions, ticker):
     return any(map(lambda p: p["ticker"] == ticker, positions))
 
@@ -380,13 +327,6 @@ def update_positions(positions, transactions):
     return updated_positions
 
 
-# test_positions = [{"ticker": "BTC", "quantity": 10, "average_price": 5}]
-# test_transactions = [{"type": "TRADE", "side": "BUY", "value": 100}, {
-#     "type": "TRADE", "side": "SELL", "value": 50}, {"type": "COMMISSION", "value": 10}]
-# test_updated_positions = update_positions(test_positions, test_transactions)
-# print("UUUUUUUUUUUUUUUUUUU updated positions UUUUUUUUUUUUUUUUUUUUUUU")
-# pprint(test_updated_positions)
-# print("UUUUUUUUUUUUUUUUUUU updated positions UUUUUUUUUUUUUUUUUUUUUUU")
 
 
 def create_next_portfolio(portfolio, weights, prices, date):
