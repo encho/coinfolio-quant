@@ -327,8 +327,6 @@ def update_positions(positions, transactions):
     return updated_positions
 
 
-
-
 def create_next_portfolio(portfolio, weights, prices, date):
 
     rebalancing_list = create_rebalancing_list(portfolio, weights, prices)
@@ -345,8 +343,6 @@ def create_next_portfolio(portfolio, weights, prices, date):
         "cash": cash,
         # TODO as external input, dependent on currency acutally!
         "commission": portfolio["commission"],
-        # TODO net positions from old positions and transactions
-        # "positions": None,
         "positions": positions,
         "transactions": transactions,
         # TODO mark to market value of portfolio in this moment in time
