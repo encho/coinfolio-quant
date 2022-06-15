@@ -9,6 +9,7 @@ from pymongo import MongoClient
 from prettyprinter import pprint
 import datetime
 import copy
+import functools
 
 
 def find_unique(predicate, data):
@@ -300,22 +301,6 @@ def maybe_update_position(position, transaction):
         }
 
 
-# test_position = {"ticker": "ETH", "quantity": 2, "average_price": 48}
-# test_transaction = {
-#     "type": "TRADE",
-#     "ticker": "ETH",
-#     "date": datetime.datetime(2022, 6, 2),
-#     "value": 99.5,
-#     "quantity": 1.99,
-#     "side": "SELL",
-#     "price": 50
-# }
-# test_updated_position = maybe_update_position(test_position, test_transaction)
-# print("$$$$$$$$$$$$$$$$")
-# pprint(test_updated_position)
-# print("$$$$$$$$$$$$$$$$")
-
-
 def update_positions(positions, transactions):
     updated_positions = copy.deepcopy(positions)
     for transaction in transactions:
@@ -380,40 +365,79 @@ MONGO_CONNECTION_STRING = os.environ["MONGO_CONNECTION_STRING"]
 client = MongoClient(MONGO_CONNECTION_STRING)
 database = client["coinfolio_prod"]
 
-# TODO rename to get_strategy_currency_universe
-tickers_2 = strategies.get_strategy_tickers(database, "G2_EQUALLY_WEIGHTED")
-tickers_4 = strategies.get_strategy_tickers(database, "G4_EQUALLY_WEIGHTED")
 
-tickers_vs_usd = list(map(lambda currency: currency + "-USD", tickers_4))
+def get_backtest_data(database, strategy_ticker, currency, start_date, end_date):
+    necessary_tickers = strategies.get_strategy_tickers(
+        database=database, ticker=strategy_ticker,
+        start_date=start_date, end_date=end_date)
+
+    cryptocurrency_exchange_rate_tickers = list(
+        map(lambda cryptocurrency: cryptocurrency + "-" + currency, necessary_tickers))
+
+    prices_df = cryptocurrencies.get_field_dataframe(
+        database=database,
+        tickers=cryptocurrency_exchange_rate_tickers,
+        field="close",
+        start_date=start_date,
+        end_date=end_date
+    )
+
+    prices_list = [make_row_dict(index, row)
+                   for index, row in prices_df.iterrows()]
+
+    weights_list = strategies.get_strategy_weights_series(
+        database=database, ticker=strategy_ticker,
+        start_date=start_date, end_date=end_date)
+
+    # safety check: check if its same dates
+    prices_dates = list(map(lambda it: it["date"], prices_list))
+    weights_dates = list(map(lambda it: it["date"], weights_list))
+    assert(prices_dates == weights_dates)
+
+    backtest_data_list = []
+    for (weights_item, prices_item) in zip(weights_list, prices_list):
+        del prices_item["date"]
+        backtest_data_item = {
+            "date": weights_item["date"],
+            "weights": weights_item["weights"],
+            "prices": prices_item,
+        }
+        backtest_data_list.append(backtest_data_item)
+
+    # e.g. result
+    # [
+    #  {
+    #     'date': datetime.datetime(2022, 6, 5),
+    #     'weights': [
+    #         {'ticker': 'BTC', 'weight': 0.5},
+    #         {'ticker': 'ETH', 'weight': 0.5}
+    #     ],
+    #     'prices': {
+    #         'ETH-USD': numpy.float64(1805.2049560546875),
+    #         'BTC-USD': numpy.float64(29906.662109375)
+    #     }
+    # },
+    # ..]
+    return backtest_data_list
 
 
-prices_df = cryptocurrencies.get_field_dataframe(
-    database, tickers_vs_usd, "close")
+zero_date = datetime.datetime(2022, 6, 3)
 
-
-weights_list = strategies.get_strategy_weights_series(
-    database, "G4_EQUALLY_WEIGHTED")
-
-prices_list = [make_row_dict(index, row)
-               for index, row in prices_df.iterrows()]
-
-
-def get_weights_for_date(d):
-    return find_unique(lambda it: it["date"] == d, weights_list)["weights"]
-
-
-def get_prices_for_date(d):
-    find_unique(lambda it: it["date"] == d, prices_list)
-
+backtest_data = get_backtest_data(
+    database=database,
+    strategy_ticker="G2_EQUALLY_WEIGHTED",
+    currency="USD",
+    start_date=datetime.datetime(2022, 6, 4),
+    end_date=datetime.datetime(2022, 6, 9)
+)
 
 portfolio_0 = {
     "currency": "USD",
     "cash": 10000,
     "commission": 0.005,
     "positions": [],
-    # "positions": [{"ticker": "ETH", "quantity": 2, "average_price": 50}],
     "transactions": [],
-    "date": weights_list[0]["date"],
+    "date": zero_date,
     "positions_market_value": 0,
     "total_value": 10000,
     "commissions_paid": 0,
@@ -421,29 +445,28 @@ portfolio_0 = {
 }
 
 
-the_date = weights_list[1]["date"]
+def run_backtest(backtest_data, start_portfolio):
 
-new_portfolio = create_next_portfolio(
-    portfolio_0,
-    [{"ticker": "BTC", "weight": 1}],
-    {"BTC-USD": 100, "ETH-USD": 50},
-    the_date
-)
+    def append_next_porfolio(portfolios_series, backtest_data_item):
+        weights = backtest_data_item["weights"]
+        prices = backtest_data_item["prices"]
+        date = backtest_data_item["date"]
+        last_portfolio = portfolios_series[-1]
+        next_portfolio = create_next_portfolio(
+            last_portfolio, weights, prices, date)
+        portfolios_series.append(next_portfolio)
+        return portfolios_series
+
+    portfolios_series = functools.reduce(append_next_porfolio,
+                                         backtest_data, [start_portfolio])
+    return portfolios_series
 
 
-print("************************** new portfolio:")
-pprint(new_portfolio)
+portfolios_series = run_backtest(backtest_data, portfolio_0)
 
 
-the_date = weights_list[1]["date"]
-
-found_weights = get_weights_for_date(the_date)
-found_prices = find_unique(lambda it: it["date"] == the_date, prices_list)
-
-print(".......")
-print(found_weights)
-print(".......")
-
-print(".......")
-print(found_prices)
-print(".......")
+print("&&&&&&&&&&")
+print("&&&&&&&&&&")
+pprint(portfolios_series)
+print("&&&&&&&&&&")
+print("&&&&&&&&&&")

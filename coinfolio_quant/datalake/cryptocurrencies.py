@@ -33,12 +33,24 @@ def get_cryptocurrency_dataframe(database, ticker):
     return df
 
 
-def get_field_series(database, ticker, field="close"):
+# TODO sort date ascending
+def get_field_series(database, ticker, field="close", start_date=None, end_date=None):
     cryptocurrency_quotes_collection = database["cryptocurrency_quotes"]
     return_values = {"_id": False, "date": 1, "ticker": 1}
     return_values[field] = 1
-    cursor = cryptocurrency_quotes_collection.find(
-        {"ticker": ticker}, return_values)
+
+    query_object = {"ticker": ticker}
+
+    if start_date or end_date:
+        date_query = {}
+        if start_date:
+            date_query["$gte"] = start_date
+        if end_date:
+            date_query["$lte"] = end_date
+
+        query_object["date"] = date_query
+
+    cursor = cryptocurrency_quotes_collection.find(query_object, return_values)
 
     results_list = list(cursor)
 
@@ -50,9 +62,13 @@ def get_field_series(database, ticker, field="close"):
     return series
 
 
-def get_field_dataframe(database, tickers, field="close"):
+def get_field_dataframe(database, tickers, start_date=None, end_date=None, field="close"):
+    print("~~~~ start and end dates: ~~~")
+    print(start_date)
+    print(end_date)
+    print("~~~~~~~")
     series_list = [get_field_series(
-        database, ticker, field) for ticker in tickers]
+        database=database, ticker=ticker, field=field, start_date=start_date, end_date=end_date) for ticker in tickers]
     series_dict = dict(zip(tickers, series_list))
     df = pd.DataFrame(series_dict)
     return df
