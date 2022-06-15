@@ -44,21 +44,19 @@ def make_row_dict(index, row):
 # ===========================================================
 
 
-def get_position_market_value(position, currency, prices, commission=0):
+def get_position_market_value(position, currency, prices):
     exchange_rate_ticker = position["ticker"]+"-"+currency
     price = prices[exchange_rate_ticker]
     quantity = position["quantity"]
-    value = (price * quantity) * (1 - commission)
-    return value
+    market_value = price * quantity
+    return market_value
 
 
 # unit test
 test_position = {"ticker": "BTC", "quantity": 10}
 test_currency = "USD"
 test_prices = {"BTC-USD": 2}
-test_commission = 0
-assert(get_position_market_value(test_position,
-       test_currency, test_prices, test_commission) == 20)
+assert(get_position_market_value(test_position, test_currency, test_prices) == 20)
 
 
 def get_positions_market_value(positions, currency, prices):
@@ -144,7 +142,6 @@ def create_rebalancing_item(ticker, positions, weights, prices, portfolio_value,
 
     item = {
         "ticker": ticker,
-        # TODO rename to old_quantity
         "old_quantity": old_quantity,
         "old_value": old_value,
         "new_weight": new_weight,
@@ -186,7 +183,7 @@ def create_transactions(rebalancing_list, date, commission=0):
     perc_transactions_costs = commission
     transactions = []
     non_zero_rebalancings = filter(
-        lambda reb: reb["transaction_value"] != 0, rebalancing_list)
+        lambda rebalancing_item: rebalancing_item["transaction_value"] != 0, rebalancing_list)
     for rebalancing_item in non_zero_rebalancings:
         ticker = rebalancing_item["ticker"]
         price = rebalancing_item["price"]
@@ -195,8 +192,7 @@ def create_transactions(rebalancing_list, date, commission=0):
 
         commission_value = abs(transaction_value * perc_transactions_costs)
 
-        net_transaction_value = (
-            abs(transaction_value) - commission_value)
+        net_transaction_value = abs(transaction_value)
 
         transactions.append({
             "type": "TRADE",
@@ -206,15 +202,12 @@ def create_transactions(rebalancing_list, date, commission=0):
             "quantity": net_transaction_value / price,
             "side": side,
             "price": price
-            # "timestamp": get_timestamp(date)
         })
 
         transactions.append({
             "type": "COMMISSION",
             "date": date,
             "value": commission_value,
-            # "transaction_id": TODO
-            # "timestamp": get_timestamp(date)
         })
     return transactions
 
@@ -250,6 +243,23 @@ def get_transactions_cash_flow(transactions):
 test_transactions = [{"type": "TRADE", "side": "BUY", "value": 100}, {
     "type": "TRADE", "side": "SELL", "value": 50}, {"type": "COMMISSION", "value": 10}]
 assert(get_transactions_cash_flow(test_transactions) == -60)
+
+
+def get_transactions_commissions(transactions):
+    commissions = 0
+    for transaction in transactions:
+        transaction_type = transaction["type"]
+        transaction_value = transaction["value"]
+
+        if transaction_type == "COMMISSION":
+            commissions = commissions + transaction_value
+
+    return commissions
+
+
+test_transactions = [{"type": "COMMISSION", "value": 45}, {"type": "TRADE", "side": "BUY", "value": 100}, {
+    "type": "TRADE", "side": "SELL", "value": 50}, {"type": "COMMISSION", "value": 10}]
+assert(get_transactions_commissions(test_transactions) == 55)
 
 
 def has_ticker(positions, ticker):
@@ -290,20 +300,20 @@ def maybe_update_position(position, transaction):
         }
 
 
-test_position = {"ticker": "ETH", "quantity": 2, "average_price": 48}
-test_transaction = {
-    "type": "TRADE",
-    "ticker": "ETH",
-    "date": datetime.datetime(2022, 6, 2),
-    "value": 99.5,
-    "quantity": 1.99,
-    "side": "SELL",
-    "price": 50
-}
-test_updated_position = maybe_update_position(test_position, test_transaction)
-print("$$$$$$$$$$$$$$$$")
-pprint(test_updated_position)
-print("$$$$$$$$$$$$$$$$")
+# test_position = {"ticker": "ETH", "quantity": 2, "average_price": 48}
+# test_transaction = {
+#     "type": "TRADE",
+#     "ticker": "ETH",
+#     "date": datetime.datetime(2022, 6, 2),
+#     "value": 99.5,
+#     "quantity": 1.99,
+#     "side": "SELL",
+#     "price": 50
+# }
+# test_updated_position = maybe_update_position(test_position, test_transaction)
+# print("$$$$$$$$$$$$$$$$")
+# pprint(test_updated_position)
+# print("$$$$$$$$$$$$$$$$")
 
 
 def update_positions(positions, transactions):
@@ -324,7 +334,10 @@ def update_positions(positions, transactions):
                 updated_positions = list(map(lambda position: maybe_update_position(
                     position, transaction), updated_positions))
 
-    return updated_positions
+    only_positions_greater_zero = list(filter(
+        lambda position: position["quantity"] > 0, updated_positions))
+
+    return only_positions_greater_zero
 
 
 def create_next_portfolio(portfolio, weights, prices, date):
@@ -333,10 +346,14 @@ def create_next_portfolio(portfolio, weights, prices, date):
     transactions = create_transactions(
         rebalancing_list, date, portfolio["commission"])
 
+    transactions_commissions = get_transactions_commissions(transactions)
     transactions_cash_flow = get_transactions_cash_flow(transactions)
     cash = portfolio["cash"] + transactions_cash_flow
 
     positions = update_positions(portfolio["positions"], transactions)
+
+    positions_market_value = get_positions_market_value(
+        positions, portfolio["currency"], prices)
 
     new_portfolio = {
         "currency": portfolio["currency"],
@@ -345,10 +362,10 @@ def create_next_portfolio(portfolio, weights, prices, date):
         "commission": portfolio["commission"],
         "positions": positions,
         "transactions": transactions,
-        # TODO mark to market value of portfolio in this moment in time
-        "value": None,
-        # TODO total value of commissions paid for transactions in this period
-        "commissions_paid": None,
+        "positions_market_value": positions_market_value,
+        "total_value": cash + positions_market_value,
+        "commissions_paid": transactions_commissions,
+        "total_commissions_paid": transactions_commissions + portfolio["commissions_paid"],
         # "_rebalancing_list": rebalancing_list
     }
     return new_portfolio
@@ -392,11 +409,13 @@ portfolio_0 = {
     "currency": "USD",
     "cash": 10000,
     "commission": 0.005,
-    # "positions": [],
-    "positions": [{"ticker": "ETH", "quantity": 2, "average_price": 48}],
+    "positions": [],
+    # "positions": [{"ticker": "ETH", "quantity": 2, "average_price": 50}],
     "transactions": [],
-    "value": 10000,
+    "positions_market_value": 0,
+    "total_value": 10000,
     "commissions_paid": 0,
+    "total_commissions_paid": 0,
 }
 
 
