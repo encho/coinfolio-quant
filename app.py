@@ -56,12 +56,21 @@ def get_strategy_backtests_series(ticker):
         database, ticker)
     return json.dumps(strategy_backtests_series, default=default)
 
+
 @app.route('/strategies/series/backtests/total_value/<ticker>')
 def get_strategy_backtests_series__total_value(ticker):
     strategy_backtests_series = backtestsDB.get_strategy_backtests_series__total_value(
         database, ticker)
     return json.dumps(strategy_backtests_series, default=default)
 
+
+@app.route('/strategies/series/backtests/total_value')
+def get_strategy_backtests_series__all__total_value():
+    strategy_backtests_series_dataframe = backtestsDB.get_strategy_backtests_series__all__total_value(
+        database)
+
+    result = strategy_backtests_series_dataframe.to_json(orient="split")
+    return result
 
 
 @app.route('/cryptocurrencies')
