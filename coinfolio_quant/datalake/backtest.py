@@ -1,5 +1,43 @@
-import coinfolio_quant.datalake.cryptocurrencies as cryptocurrencies
-import coinfolio_quant.datalake.strategies as strategies
+# import coinfolio_quant.datalake.cryptocurrencies as cryptocurrencies
+# import coinfolio_quant.datalake.strategies as strategies
+
+# import datalake.cryptocurrencies as cryptocurrencies
+# import datalake.strategies as strategies
+
+
+# TODO sort date ascending
+def get_strategy_backtests_series(database, strategy_ticker, start_date=None, end_date=None):
+    query_object = {"strategy_ticker": strategy_ticker}
+
+    if start_date or end_date:
+        date_query = {}
+        if start_date:
+            date_query["$gte"] = start_date
+        if end_date:
+            date_query["$lte"] = end_date
+
+        query_object["date"] = date_query
+
+    result = database.strategies_backtests.find(query_object, {"_id": False})
+    return list(result)
+
+
+def get_strategy_backtests_series__total_value(database, strategy_ticker, start_date=None, end_date=None):
+    query_object = {"strategy_ticker": strategy_ticker}
+
+    if start_date or end_date:
+        date_query = {}
+        if start_date:
+            date_query["$gte"] = start_date
+        if end_date:
+            date_query["$lte"] = end_date
+
+        query_object["date"] = date_query
+
+    result = database.strategies_backtests.find(
+        query_object, {"_id": False, "date": 1, "total_value": 1})
+    return list(result)
+
 
 # portfolio namespace
 # ===========================================================
@@ -21,48 +59,48 @@ import coinfolio_quant.datalake.strategies as strategies
 # ..]
 
 
-def get_backtest_data(database, strategy_ticker, currency, start_date, end_date):
-    # TODO eventually into utils
-    def make_row_dict(index, row):
-        d = dict(row)
-        d["date"] = index.to_pydatetime()
-        return d
+# def get_backtest_data(database, strategy_ticker, currency, start_date, end_date):
+#     # TODO eventually into utils
+#     def make_row_dict(index, row):
+#         d = dict(row)
+#         d["date"] = index.to_pydatetime()
+#         return d
 
-    necessary_tickers = strategies.get_strategy_tickers(
-        database=database, ticker=strategy_ticker,
-        start_date=start_date, end_date=end_date)
+#     necessary_tickers = strategies.get_strategy_tickers(
+#         database=database, ticker=strategy_ticker,
+#         start_date=start_date, end_date=end_date)
 
-    cryptocurrency_exchange_rate_tickers = list(
-        map(lambda cryptocurrency: cryptocurrency + "-" + currency, necessary_tickers))
+#     cryptocurrency_exchange_rate_tickers = list(
+#         map(lambda cryptocurrency: cryptocurrency + "-" + currency, necessary_tickers))
 
-    prices_df = cryptocurrencies.get_field_dataframe(
-        database=database,
-        tickers=cryptocurrency_exchange_rate_tickers,
-        field="close",
-        start_date=start_date,
-        end_date=end_date
-    )
+#     prices_df = cryptocurrencies.get_field_dataframe(
+#         database=database,
+#         tickers=cryptocurrency_exchange_rate_tickers,
+#         field="close",
+#         start_date=start_date,
+#         end_date=end_date
+#     )
 
-    prices_list = [make_row_dict(index, row)
-                   for index, row in prices_df.iterrows()]
+#     prices_list = [make_row_dict(index, row)
+#                    for index, row in prices_df.iterrows()]
 
-    weights_list = strategies.get_strategy_weights_series(
-        database=database, ticker=strategy_ticker,
-        start_date=start_date, end_date=end_date)
+#     weights_list = strategies.get_strategy_weights_series(
+#         database=database, ticker=strategy_ticker,
+#         start_date=start_date, end_date=end_date)
 
-    # safety check: check if its same dates
-    prices_dates = list(map(lambda it: it["date"], prices_list))
-    weights_dates = list(map(lambda it: it["date"], weights_list))
-    assert(prices_dates == weights_dates)
+#     # safety check: check if its same dates
+#     prices_dates = list(map(lambda it: it["date"], prices_list))
+#     weights_dates = list(map(lambda it: it["date"], weights_list))
+#     assert(prices_dates == weights_dates)
 
-    backtest_data_list = []
-    for (weights_item, prices_item) in zip(weights_list, prices_list):
-        del prices_item["date"]
-        backtest_data_item = {
-            "date": weights_item["date"],
-            "weights": weights_item["weights"],
-            "prices": prices_item,
-        }
-        backtest_data_list.append(backtest_data_item)
+#     backtest_data_list = []
+#     for (weights_item, prices_item) in zip(weights_list, prices_list):
+#         del prices_item["date"]
+#         backtest_data_item = {
+#             "date": weights_item["date"],
+#             "weights": weights_item["weights"],
+#             "prices": prices_item,
+#         }
+#         backtest_data_list.append(backtest_data_item)
 
-    return backtest_data_list
+#     return backtest_data_list

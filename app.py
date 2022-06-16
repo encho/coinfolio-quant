@@ -9,6 +9,7 @@ import datetime
 
 import coinfolio_quant.datalake.cryptocurrencies as cryptocurrenciesDB
 import coinfolio_quant.datalake.strategies as strategiesDB
+import coinfolio_quant.datalake.backtest as backtestsDB
 
 MONGO_CONNECTION_STRING = os.environ["MONGO_CONNECTION_STRING"]
 
@@ -47,6 +48,20 @@ def get_strategy_weights_series(ticker):
     strategy_weights_series = strategiesDB.get_strategy_weights_series(
         database, ticker)
     return json.dumps(strategy_weights_series, default=default)
+
+
+@app.route('/strategies/series/backtests/<ticker>')
+def get_strategy_backtests_series(ticker):
+    strategy_backtests_series = backtestsDB.get_strategy_backtests_series(
+        database, ticker)
+    return json.dumps(strategy_backtests_series, default=default)
+
+@app.route('/strategies/series/backtests/total_value/<ticker>')
+def get_strategy_backtests_series__total_value(ticker):
+    strategy_backtests_series = backtestsDB.get_strategy_backtests_series__total_value(
+        database, ticker)
+    return json.dumps(strategy_backtests_series, default=default)
+
 
 
 @app.route('/cryptocurrencies')

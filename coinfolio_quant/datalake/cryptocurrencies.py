@@ -63,10 +63,6 @@ def get_field_series(database, ticker, field="close", start_date=None, end_date=
 
 
 def get_field_dataframe(database, tickers, start_date=None, end_date=None, field="close"):
-    print("~~~~ start and end dates: ~~~")
-    print(start_date)
-    print(end_date)
-    print("~~~~~~~")
     series_list = [get_field_series(
         database=database, ticker=ticker, field=field, start_date=start_date, end_date=end_date) for ticker in tickers]
     series_dict = dict(zip(tickers, series_list))

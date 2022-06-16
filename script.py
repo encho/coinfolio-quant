@@ -1,21 +1,10 @@
-from hashlib import new
 import os
-from socket import getnameinfo
-from webbrowser import get
-import pandas as pd
-import coinfolio_quant.datalake.cryptocurrencies as cryptocurrencies
-import coinfolio_quant.datalake.strategies as strategies
 import coinfolio_quant.datalake.backtest as datalake_backtest
 from pymongo import MongoClient
 from prettyprinter import pprint
 import datetime
-import copy
 import functools
 import coinfolio_quant.portfolio.backtest as backtest
-
-# portfolio namespace
-# ===========================================================
-
 
 # **************************************************************
 # THE SCRIPT
@@ -24,7 +13,6 @@ MONGO_CONNECTION_STRING = os.environ["MONGO_CONNECTION_STRING"]
 
 client = MongoClient(MONGO_CONNECTION_STRING)
 database = client["coinfolio_prod"]
-
 
 zero_date = datetime.datetime(2022, 6, 3)
 

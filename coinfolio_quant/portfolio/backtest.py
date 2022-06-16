@@ -309,6 +309,7 @@ def create_next_portfolio(portfolio, weights, prices, date):
         positions, portfolio["currency"], prices)
 
     new_portfolio = {
+        "strategy_ticker": portfolio["strategy_ticker"],
         "currency": portfolio["currency"],
         "cash": cash,
         # TODO as external input, dependent on currency acutally!
