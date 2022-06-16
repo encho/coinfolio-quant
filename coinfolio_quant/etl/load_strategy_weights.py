@@ -41,17 +41,17 @@ def create_strategy_weights(strategy_weights_collection, strategy_ticker, date):
 
     currency_universe = strategy_spec["get_universe"](date)
 
-    print("computing strategy weights strategy: " +
-          strategy_ticker + ", date: " + date.strftime("%Y-%m-%d, %H:%M:%S"))
+    # print("computing strategy weights strategy: " +
+    #       strategy_ticker + ", date: " + date.strftime("%Y-%m-%d, %H:%M:%S"))
 
-    print("currency universe:")
-    print(currency_universe)
+    # print("currency universe:")
+    # print(currency_universe)
 
     strategy_weights = strategy_spec["get_weights"](
         date, currency_universe)
 
-    print("strategy weights:")
-    print(strategy_weights)
+    # print("strategy weights:")
+    # print(strategy_weights)
 
     strategy_weights_record = {
         "ticker": strategy_ticker,
@@ -59,7 +59,7 @@ def create_strategy_weights(strategy_weights_collection, strategy_ticker, date):
         "weights": strategy_weights
     }
 
-    print("strategy weights record:")
-    print(strategy_weights_record)
+    # print("strategy weights record:")
+    # print(strategy_weights_record)
 
     strategy_weights_collection.insert_one(strategy_weights_record)
