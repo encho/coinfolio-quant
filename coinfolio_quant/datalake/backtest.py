@@ -6,6 +6,7 @@
 
 from prettyprinter import pprint
 import pandas as pd
+from pymongo import DESCENDING
 
 
 # TODO sort date ascending
@@ -76,6 +77,15 @@ def get_strategy_backtests_series__all__total_value(database):
             result_series.append(result_series_item)
 
     return pd.DataFrame(result_series)
+
+
+# TODO into strategies file
+def get_strategy_latest_weights(database, strategy_ticker):
+    result = database.strategies_weights.find(
+        {"ticker": strategy_ticker}, {"_id": False}).sort("date", DESCENDING).limit(1)
+
+    result_list = list(result)
+    return result_list[0]
 
     # portfolio namespace
     # ===========================================================

@@ -64,6 +64,30 @@ def get_strategy_backtests_series__total_value(ticker):
     return json.dumps(strategy_backtests_series, default=default)
 
 
+@app.route('/strategies/weights/<ticker>')
+def get_strategy_latest_weights(ticker):
+    strategy_latest_weights = backtestsDB.get_strategy_latest_weights(
+        database, ticker)
+    return json.dumps(strategy_latest_weights, default=default)
+
+
+# TODO: actually performance metrics are not for a strategy, but for a model portfolio (i.e. strategy - inflow/outflow scenario - money management combination...)
+@app.route('/strategies/performance_metrics/<ticker>')
+def get_strategy_performance_metrics(ticker):
+    currenct_strategy_performance_metrics = {
+        "ticker": ticker,
+        "date": datetime.datetime.now(),
+        "performance_metrics": {
+            "sharpe_ratio": 1.23,
+            "total_return": 4.54,
+            "annualised_return": 1.22,
+            "maximum_drawdown": -0.5,
+        }
+    }
+
+    return json.dumps(currenct_strategy_performance_metrics, default=default)
+
+
 @app.route('/strategies/series/backtests/total_value')
 def get_strategy_backtests_series__all__total_value():
     strategy_backtests_series_dataframe = backtestsDB.get_strategy_backtests_series__all__total_value(
