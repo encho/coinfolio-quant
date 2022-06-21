@@ -11,6 +11,7 @@ import coinfolio_quant.datalake.cryptocurrencies as cryptocurrenciesDB
 import coinfolio_quant.datalake.strategies as strategiesDB
 import coinfolio_quant.datalake.backtest as backtestsDB
 
+
 MONGO_CONNECTION_STRING = os.environ["MONGO_CONNECTION_STRING"]
 
 client = MongoClient(MONGO_CONNECTION_STRING)
@@ -71,21 +72,12 @@ def get_strategy_latest_weights(ticker):
     return json.dumps(strategy_latest_weights, default=default)
 
 
-# TODO: actually performance metrics are not for a strategy, but for a model portfolio (i.e. strategy - inflow/outflow scenario - money management combination...)
 @app.route('/strategies/performance_metrics/<ticker>')
 def get_strategy_performance_metrics(ticker):
-    currenct_strategy_performance_metrics = {
-        "ticker": ticker,
-        "date": datetime.datetime.now(),
-        "performance_metrics": {
-            "sharpe_ratio": 1.23,
-            "total_return": 4.54,
-            "annualised_return": 1.22,
-            "maximum_drawdown": -0.5,
-        }
-    }
+    current_strategy_performance_metrics = backtestsDB.get_performance_metrics(
+        database, ticker)
 
-    return json.dumps(currenct_strategy_performance_metrics, default=default)
+    return json.dumps(current_strategy_performance_metrics, default=default)
 
 
 @app.route('/strategies/series/backtests/total_value')

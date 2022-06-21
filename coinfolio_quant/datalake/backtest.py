@@ -6,7 +6,36 @@
 
 from prettyprinter import pprint
 import pandas as pd
+import numpy as np
 from pymongo import DESCENDING
+
+
+# TODO into backtest utils package, s.t. the functions can be used everywhere (e.g. etl, scripts, etc..)
+def prices_to_returns(prices_series):
+    return np.log(prices_series/prices_series.shift())
+
+
+# TODO into backtest utils package, s.t. the functions can be used everywhere (e.g. etl, scripts, etc..)
+def sharpe_ratio(prices_series, ann_factor=365):
+    returns_series = prices_to_returns(prices_series)
+    sr = returns_series.mean() / returns_series.std()
+    ann_sr = sr * ann_factor**0.5
+    return ann_sr
+
+
+# TODO into backtest utils package, s.t. the functions can be used everywhere (e.g. etl, scripts, etc..)
+def total_return(prices_series):
+    last_price = prices_series.iloc[-1]
+    first_price = prices_series.iloc[0]
+    return (last_price - first_price) / first_price
+
+
+# TODO into backtest utils package, s.t. the functions can be used everywhere (e.g. etl, scripts, etc..)
+def annualized_return(prices_series, ann_factor=365):
+    returns_series = prices_to_returns(prices_series)
+    mean_return = returns_series.mean()
+    ann_mean_return = ann_factor * mean_return
+    return ann_mean_return
 
 
 # TODO sort date ascending
@@ -87,67 +116,26 @@ def get_strategy_latest_weights(database, strategy_ticker):
     result_list = list(result)
     return result_list[0]
 
-    # portfolio namespace
-    # ===========================================================
 
-    # retrieves the data necessary to run a strategy backtest simulation
-    # e.g. result
-    # [
-    #  {
-    #     'date': datetime.datetime(2022, 6, 5),
-    #     'weights': [
-    #         {'ticker': 'BTC', 'weight': 0.5},
-    #         {'ticker': 'ETH', 'weight': 0.5}
-    #     ],
-    #     'prices': {
-    #         'ETH-USD': numpy.float64(1805.2049560546875),
-    #         'BTC-USD': numpy.float64(29906.662109375)
-    #     }
-    # },
-    # ..]
+def get_performance_metrics(database, strategy_ticker):
+    backtest_total_value_series = get_strategy_backtests_series__total_value(
+        database, strategy_ticker)
 
-    # def get_backtest_data(database, strategy_ticker, currency, start_date, end_date):
-    #     # TODO eventually into utils
-    #     def make_row_dict(index, row):
-    #         d = dict(row)
-    #         d["date"] = index.to_pydatetime()
-    #         return d
+    series_dates = [item["date"] for item in backtest_total_value_series]
+    series_total_values = [item["total_value"]
+                           for item in backtest_total_value_series]
 
-    #     necessary_tickers = strategies.get_strategy_tickers(
-    #         database=database, ticker=strategy_ticker,
-    #         start_date=start_date, end_date=end_date)
+    total_values_series = pd.Series(series_total_values, index=series_dates)
 
-    #     cryptocurrency_exchange_rate_tickers = list(
-    #         map(lambda cryptocurrency: cryptocurrency + "-" + currency, necessary_tickers))
+    performance_metrics = {
+        "sharpe_ratio": sharpe_ratio(total_values_series),
+        "total_return": total_return(total_values_series),
+        "annualized_return": annualized_return(total_values_series),
+    }
 
-    #     prices_df = cryptocurrencies.get_field_dataframe(
-    #         database=database,
-    #         tickers=cryptocurrency_exchange_rate_tickers,
-    #         field="close",
-    #         start_date=start_date,
-    #         end_date=end_date
-    #     )
-
-    #     prices_list = [make_row_dict(index, row)
-    #                    for index, row in prices_df.iterrows()]
-
-    #     weights_list = strategies.get_strategy_weights_series(
-    #         database=database, ticker=strategy_ticker,
-    #         start_date=start_date, end_date=end_date)
-
-    #     # safety check: check if its same dates
-    #     prices_dates = list(map(lambda it: it["date"], prices_list))
-    #     weights_dates = list(map(lambda it: it["date"], weights_list))
-    #     assert(prices_dates == weights_dates)
-
-    #     backtest_data_list = []
-    #     for (weights_item, prices_item) in zip(weights_list, prices_list):
-    #         del prices_item["date"]
-    #         backtest_data_item = {
-    #             "date": weights_item["date"],
-    #             "weights": weights_item["weights"],
-    #             "prices": prices_item,
-    #         }
-    #         backtest_data_list.append(backtest_data_item)
-
-    #     return backtest_data_list
+    return {
+        "ticker": strategy_ticker,
+        "start_date": total_values_series.index[0].to_pydatetime(),
+        "end_date": total_values_series.index[-1].to_pydatetime(),
+        "performance_metrics": performance_metrics,
+    }
