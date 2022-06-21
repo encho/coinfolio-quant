@@ -49,3 +49,11 @@ Load the crypto histories into the database:
 ```
 MONGO_CONNECTION_STRING=<mongo-conn-string> python ./etl/load_crypto_histories.py
 ```
+
+## IPython
+
+Print current working directory from IPython shell:
+
+```
+!pwd
+```
