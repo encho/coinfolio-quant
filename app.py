@@ -11,6 +11,7 @@ import coinfolio_quant.datalake.cryptocurrencies as cryptocurrenciesDB
 import coinfolio_quant.datalake.strategies as strategiesDB
 import coinfolio_quant.datalake.backtest as backtestsDB
 
+
 MONGO_CONNECTION_STRING = os.environ["MONGO_CONNECTION_STRING"]
 
 client = MongoClient(MONGO_CONNECTION_STRING)
@@ -62,6 +63,21 @@ def get_strategy_backtests_series__total_value(ticker):
     strategy_backtests_series = backtestsDB.get_strategy_backtests_series__total_value(
         database, ticker)
     return json.dumps(strategy_backtests_series, default=default)
+
+
+@app.route('/strategies/weights/<ticker>')
+def get_strategy_latest_weights(ticker):
+    strategy_latest_weights = backtestsDB.get_strategy_latest_weights(
+        database, ticker)
+    return json.dumps(strategy_latest_weights, default=default)
+
+
+@app.route('/strategies/performance_metrics/<ticker>')
+def get_strategy_performance_metrics(ticker):
+    current_strategy_performance_metrics = backtestsDB.get_performance_metrics(
+        database, ticker)
+
+    return json.dumps(current_strategy_performance_metrics, default=default)
 
 
 @app.route('/strategies/series/backtests/total_value')
