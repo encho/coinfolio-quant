@@ -83,6 +83,26 @@ STRATEGIES = [
         "ticker": "G2_EQUALLY_WEIGHTED",
         "name": "Equally Weighted G2 Basket",
         "description": "Equally weighted portfolio of 2 main cryptocurrencies.",
+    },
+    {
+        "ticker": "GOLD_CRYPTO_50_50",
+        "name": "Gold & Bitcoin 50-50 Basket",
+        "description": "Gold & Bitcoin Portfolio 50%-50%",
+    },
+    {
+        "ticker": "GOLD_CRYPTO_60_40",
+        "name": "Gold & Bitcoin 60-40 Basket",
+        "description": "Gold & Bitcoin Portfolio 60%-40%",
+    },
+    {
+        "ticker": "GOLD_CRYPTO_70_30",
+        "name": "Gold & Bitcoin 70-30 Basket",
+        "description": "Gold & Bitcoin Portfolio 70%-30%",
+    },
+    {
+        "ticker": "COINFOLIO_GOLD_CRYPTO",
+        "name": "Gold Crypto",
+        "description": "Gold & Crypto Portfolio",
     }
 ]
 

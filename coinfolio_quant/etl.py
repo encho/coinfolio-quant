@@ -11,15 +11,18 @@ from prettyprinter import pprint
 import functools
 
 
-def get_dates_until_today(date_string):
-    date = datetime.datetime.strptime(date_string, "%Y-%m-%d")
-    dates = [date]
-    current_date = date
+def parse_date(date_string):
+    return datetime.datetime.strptime(date_string, "%Y-%m-%d")
 
-    today_at_midnight = datetime.datetime.now().replace(
-        hour=0, minute=0, second=0, microsecond=0)
 
-    while current_date < today_at_midnight:
+def get_dates_for_period(start_date_string, end_date_string):
+    start_date = parse_date(start_date_string)
+    dates = [start_date]
+    current_date = start_date
+
+    end_date = parse_date(end_date_string)
+
+    while current_date < end_date:
         next_day = current_date + datetime.timedelta(days=1)
         dates.append(next_day)
         current_date = next_day
@@ -29,13 +32,18 @@ def get_dates_until_today(date_string):
 MONGO_CONNECTION_STRING = os.environ["MONGO_CONNECTION_STRING"]
 
 # TODO have this as datetime object, yahoo fetching function needs to transform this into string eventually
-START_DATE = "2020-01-01"
+# START_DATE = "2018-01-01"
+# START_DATE = "2022-06-01"
+# START_DATE = "2020-08-30"
+START_DATE = "2020-01-02"
+END_DATE = "2022-06-21"
 
 CRYPTOCURRENCIES = [
-    {"ticker": "BTC-USD", "base": "BTC", "quote": "USD"},
-    {"ticker": "ETH-USD", "base": "ETH", "quote": "USD"},
-    {"ticker": "XRP-USD", "base": "XRP", "quote": "USD"},
-    {"ticker": "ADA-USD", "base": "ADA", "quote": "USD"},
+    {"ticker": "BTC-USD", "base": "BTC", "quote": "USD", "yahoo_ticker": "BTC-USD"},
+    {"ticker": "ETH-USD", "base": "ETH", "quote": "USD", "yahoo_ticker": "ETH-USD"},
+    {"ticker": "XRP-USD", "base": "XRP", "quote": "USD", "yahoo_ticker": "XRP-USD"},
+    {"ticker": "ADA-USD", "base": "ADA", "quote": "USD", "yahoo_ticker": "ADA-USD"},
+    {"ticker": "XAU-USD", "base": "XAU", "quote": "USD", "yahoo_ticker": "GC=F"},
     # {"ticker": "BTC-EUR", "base": "BTC", "quote": "EUR"},
     # {"ticker": "ETH-EUR", "base": "ETH", "quote": "EUR"},
     # {"ticker": "XRP-EUR", "base": "XRP", "quote": "EUR"},
@@ -53,7 +61,27 @@ STRATEGIES = [
         "ticker": "G2_EQUALLY_WEIGHTED",
         "name": "Equally Weighted G2 Basket",
         "description": "Equally weighted portfolio of 2 main cryptocurrencies.",
-    }
+    },
+    {
+        "ticker": "GOLD_CRYPTO_50_50",
+        "name": "Gold Crypto 50-50 Basket",
+        "description": "Gold & Crypto Portfolio 50/50",
+    },
+    {
+        "ticker": "GOLD_CRYPTO_60_40",
+        "name": "Gold Crypto 60-40 Basket",
+        "description": "Gold & Crypto Portfolio 60/40",
+    },
+    {
+        "ticker": "GOLD_CRYPTO_70_30",
+        "name": "Gold Crypto 70-30 Basket",
+        "description": "Gold & Crypto Portfolio 70/30",
+    },
+    {
+        "ticker": "COINFOLIO_GOLD_CRYPTO",
+        "name": "Gold Crypto Basket",
+        "description": "Gold & Crypto Portfolio",
+    },
 ]
 
 # TODO eventually close connection at end of script
@@ -80,7 +108,7 @@ cryptocurrency_quotes_collection.drop()
 # insert the quotes
 for cryptocurrency in CRYPTOCURRENCIES:
     load_crypto_ohlc_series.run(
-        cryptocurrency_quotes_collection, cryptocurrency, START_DATE)
+        cryptocurrency_quotes_collection, cryptocurrency, START_DATE, END_DATE)
 
 
 # --------------------------------------------------------------------
@@ -90,11 +118,14 @@ for cryptocurrency in CRYPTOCURRENCIES:
 strategies_weights_collection = database["strategies_weights"]
 strategies_weights_collection.drop()
 # create the history of equal weighted G4/5 strategy!
-dates_until_today = get_dates_until_today(START_DATE)
+# dates_until_today = get_dates_until_today(START_DATE)
+dates_list_for_period = get_dates_for_period(START_DATE, END_DATE)
+
+print(dates_list_for_period)
 
 for strategy in STRATEGIES:
     print("creating strategy weights for strategy: " + strategy["ticker"])
-    for date in dates_until_today:
+    for date in dates_list_for_period:
         create_strategy_weights(strategies_weights_collection,
                                 strategy["ticker"], date)
 
@@ -208,7 +239,7 @@ def load_backtest_into_database(strategies_backtests_collection, strategy_ticker
 for strategy in STRATEGIES:
     print("creating and loading backtest for: " + strategy["ticker"])
     load_backtest_into_database(strategies_backtests_collection,
-                                strategy["ticker"], dates_until_today[0], dates_until_today[-1])
+                                strategy["ticker"], dates_list_for_period[0], dates_list_for_period[-1])
 
 
 client.close()
