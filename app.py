@@ -1,7 +1,7 @@
 import os
 import json
 from pymongo import MongoClient
-from flask import Flask
+from flask import Flask, request
 from flask_cors import CORS
 from cryptocmd import CmcScraper
 import datetime
@@ -10,6 +10,7 @@ import datetime
 import coinfolio_quant.datalake.cryptocurrencies as cryptocurrenciesDB
 import coinfolio_quant.datalake.strategies as strategiesDB
 import coinfolio_quant.datalake.backtest as backtestsDB
+import coinfolio_quant.exchanges.ftx.ftx as ftxWrapper
 
 
 MONGO_CONNECTION_STRING = os.environ["MONGO_CONNECTION_STRING"]
@@ -118,6 +119,20 @@ def crypto_series():
     result = df.to_json(orient="table")
 
     return result
+
+
+@app.route("/ftx/positions")
+def ftx_get_positions():
+
+    args = request.args
+
+    # TODO we should return error if these query params are not available!
+    api_key = args.get("api_key")
+    api_secret = args.get("api_secret")
+
+    result = ftxWrapper.get_positions(api_key=api_key, api_secret=api_secret)
+
+    return json.dumps(result)
 
 
 if __name__ == '__main__':
