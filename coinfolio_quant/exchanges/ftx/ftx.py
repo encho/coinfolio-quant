@@ -84,7 +84,11 @@ def get_positions(api_key, api_secret):
 
     wallet_balances = c.get_wallet_balances()
 
+    total_usd_value = 0
+    for wallet in wallet_balances:
+        total_usd_value = total_usd_value + wallet["usdValue"]
+
     positions = [{"ticker": item["coin"], "quantity": item["total"],
-                  "usdValue": item["usdValue"]} for item in wallet_balances]
+                  "usdValue": item["usdValue"], "weight": item["usdValue"] / total_usd_value} for item in wallet_balances if item["total"] > 0]
 
     return positions
