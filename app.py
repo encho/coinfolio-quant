@@ -135,5 +135,28 @@ def ftx_get_positions():
     return json.dumps(result)
 
 
+@app.route("/ftx/rebalance")
+def ftx_rebalance():
+
+    args = request.args
+
+    # TODO we should return error if these query params are not available!
+    api_key = args.get("api_key")
+    api_secret = args.get("api_secret")
+
+    target_weights = [
+        {"ticker": "BTC", "weight": 0.20},
+        {"ticker": "SOL", "weight": 0.20},
+        {"ticker": "ETH", "weight": 0.20},
+        {"ticker": "XRP", "weight": 0.20},
+        {"ticker": "LTC", "weight": 0.20},
+    ]
+
+    result = ftxWrapper.rebalance_portfolio(
+        api_key=api_key, api_secret=api_secret, target_weights=target_weights)
+
+    return json.dumps(result)
+
+
 if __name__ == '__main__':
     app.run()
