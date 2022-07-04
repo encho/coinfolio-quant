@@ -1,12 +1,11 @@
-# import pandas as pd
-# import requests
 import time
 import urllib.parse
 from typing import Optional, Dict, Any, List
 from requests import Request, Session, Response, get
 import hmac
-# import os
 from prettyprinter import pprint
+
+from coinfolio_quant.portfolio.rebalancing import create_target_positions, get_total_positions_value, create_liquidations, create_rebalancing_buys
 
 
 class FtxClient:
@@ -57,7 +56,7 @@ class FtxClient:
                 raise Exception(data['error'])
             return data['result']
 
-    def place_order(self, market: str, side: str, price: float, size: float, client_id: str,
+    def place_order(self, market: str, side: str, price: float, size: float, client_id: str = None,
                     type: str = 'limit', reduce_only: bool = False, ioc: bool = False, post_only: bool = False,
                     ) -> dict:
         return self._post('orders', {'market': market,
@@ -74,21 +73,96 @@ class FtxClient:
     def get_open_orders(self, order_id: int, market: str = None) -> List[dict]:
         return self._get(f'orders', {'market': market, 'order_id': order_id})
 
-    def get_wallet_balances(self) -> List[dict]:
-        return self._get(f'wallet/balances')
+    def execute_liquidation(self, ticker: str, size: float, into: str = 'USD', client_id: str = None):
+        # e.g. BTC/USD
+        market = ticker + "/" + into
+        try:
+            self.place_order(market=market, side="sell", price=None,
+                             size=size, client_id=client_id, type="market")
+        except Exception as e:
+            # TODO log this and eventually have a look in the ui as well
+            print(f'Error making liquidation order request: {e}')
+
+    def get_markets(self) -> List[dict]:
+        return self._get(f'markets')
+
+    def get_positions(self) -> List[dict]:
+        wallet_balances = self._get(f'wallet/balances')
+
+        total_usd_value = 0
+        for wallet in wallet_balances:
+            total_usd_value = total_usd_value + wallet["usdValue"]
+
+        positions = [{"ticker": item["coin"], "quantity": item["total"],
+                      "usdValue": item["usdValue"], "weight": item["usdValue"] / total_usd_value} for item in wallet_balances if item["total"] > 0]
+
+        return positions
+
+    def execute_liquidations(self, liquidations):
+        for liquidation in liquidations:
+            self.execute_liquidation(ticker=liquidation["ticker"],
+                                     size=liquidation["liquidation_quantity"],
+                                     into="USD"
+                                     )
+
+    def execute_rebalancing_buys(self, rebalancing_buys):
+        for rebalancing_buy in rebalancing_buys:
+            ticker = rebalancing_buy["ticker"]
+            market = ticker + "/USD"
+            buy_quantity = rebalancing_buy["buy_quantity"]
+
+            if buy_quantity > 0:
+                self.place_order(market=market, side="buy",
+                                 price=None, size=buy_quantity, type="market")
+
+    def trigger_rebalance(self, target_weights):
+
+        # 1. get current positions and total portfolio value
+        positions = self.get_positions()
+        total_portfolio_value = get_total_positions_value(positions)
+
+        # 2. get current market data list
+        market_data_list = self.get_markets()
+
+        # 3. create ideal market positions (respecting lot sizes)
+        target_positions = create_target_positions(
+            target_weights, total_portfolio_value, market_data_list)
+
+        # 4. determine liquidations into USD
+        liquidations = create_liquidations(positions, target_positions)
+
+        # 5. exectue liquidations into USD
+        self.execute_liquidations(liquidations)
+
+        # 6. get liquidated positions
+        liquidated_positions = self.get_positions()
+
+        # 7. determine new portfolio value
+        liquidated_total_portfolio_value = get_total_positions_value(
+            liquidated_positions)
+
+        # 8. get updated market data list
+        market_data_list_post_liquidations = self.get_markets()
+
+        # 9. determine new target_positions
+        target_positions_post_liquidations = create_target_positions(
+            target_weights, liquidated_total_portfolio_value, market_data_list_post_liquidations)
+
+        # 10. get rebalancing buys
+        rebalancing_buys = create_rebalancing_buys(
+            target_positions_post_liquidations, liquidated_positions, market_data_list_post_liquidations)
+
+        # 11. execute rebalancing buys
+        self.execute_rebalancing_buys(rebalancing_buys)
 
 
+# TODO deprecate, use directly in app.py
 def get_positions(api_key, api_secret):
-
     c = FtxClient(api_key=api_key, api_secret=api_secret)
+    return c.get_positions()
 
-    wallet_balances = c.get_wallet_balances()
 
-    total_usd_value = 0
-    for wallet in wallet_balances:
-        total_usd_value = total_usd_value + wallet["usdValue"]
-
-    positions = [{"ticker": item["coin"], "quantity": item["total"],
-                  "usdValue": item["usdValue"], "weight": item["usdValue"] / total_usd_value} for item in wallet_balances if item["total"] > 0]
-
-    return positions
+# TODO deprecate, use directly in app.py
+def rebalance_portfolio(api_key, api_secret, target_weights):
+    c = FtxClient(api_key=api_key, api_secret=api_secret)
+    return c.trigger_rebalance(target_weights)

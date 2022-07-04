@@ -71,6 +71,9 @@ class FtxClient:
                                      'clientId': client_id,
                                      })
 
+    def get_markets(self) -> List[dict]:
+        return self._get(f'markets')
+
     def get_open_orders(self, order_id: int, market: str = None) -> List[dict]:
         return self._get(f'orders', {'market': market, 'order_id': order_id})
 
@@ -83,6 +86,8 @@ df = pd.DataFrame(markets['result'])
 df.set_index('name', inplace=True)
 df.T
 
+print(df)
+
 
 markets = get(
     'https://ftx.com/api/markets/AAPL/USD').json()
@@ -90,6 +95,8 @@ markets = get(
 apple = pd.DataFrame(markets)
 apple = apple.drop(['success'], axis=1)
 apple
+
+print(apple)
 # markets = pd.DataFrame(requests.get(
 #     'https://ftx.com/api/markets/BTC-0924').json())
 # markets = markets.drop(['success'], axis=1)
@@ -107,4 +114,12 @@ c = FtxClient(api_key=FTX_API_KEY, api_secret=FTX_API_SECRET)
 
 balances = c.get_wallet_balances()
 
+markets = c.get_markets()
+
 pprint(balances)
+pprint(markets)
+
+markets_filtered = list(
+    filter(lambda it: it["quoteCurrency"] == "USD" and it["baseCurrency"] == "BTC", markets))
+
+pprint(markets_filtered)
