@@ -48,10 +48,18 @@ def resample_irregular_timeseries(irregular_pandas_series, freq="1D", index_key=
 
 
 def resample_irregular_timeseries_list(data_list, freq="1D", index_key="index", value_key="value"):
+    if len(data_list) == 0:
+        return []
     index = map(lambda it: it[index_key], data_list)
     values = map(lambda it: it[value_key], data_list)
     irregular_timeseries = pd.Series(values, index=index)
-    return resample_irregular_timeseries(irregular_timeseries, freq=freq, index_key=index_key, value_key=value_key)
+    resampled_timeseries = resample_irregular_timeseries(
+        irregular_timeseries, freq=freq, index_key=index_key, value_key=value_key)
+
+    resampled_timeseries_list = [{"index": index, "value": value}
+                                 for (index, value) in resampled_timeseries.iteritems()]
+
+    return resampled_timeseries_list
 
 
 def get_portfolio_value_series(database, client_id):
@@ -62,8 +70,8 @@ def get_portfolio_value_series(database, client_id):
     series_list = list(result)
     index_value_list = list(
         map(lambda it: {"index": it["timestamp"], "value": it["usd_value"]}, series_list))
-    resampled_series = resample_irregular_timeseries_list(index_value_list)
-    resampled_series_list = [{"index": index, "value": value}
-                             for (index, value) in resampled_series.iteritems()]
+
+    resampled_series_list = resample_irregular_timeseries_list(
+        index_value_list)
 
     return resampled_series_list
