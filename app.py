@@ -10,6 +10,7 @@ import datetime
 import coinfolio_quant.datalake.cryptocurrencies as cryptocurrenciesDB
 import coinfolio_quant.datalake.strategies as strategiesDB
 import coinfolio_quant.datalake.backtest as backtestsDB
+import coinfolio_quant.datalake.client_portfolios as clientPortfoliosDB
 import coinfolio_quant.exchanges.ftx.ftx as ftxWrapper
 
 
@@ -156,6 +157,52 @@ def ftx_rebalance():
         api_key=api_key, api_secret=api_secret, target_weights=target_weights)
 
     return json.dumps(result)
+
+
+@app.route("/ftx/persist_portfolio_snapshot")
+def ftx_persist_portfolio_snapshot():
+
+    args = request.args
+
+    # TODO we should return error if these query params are not available!
+    api_key = args.get("api_key")
+    api_secret = args.get("api_secret")
+    user_id = args.get("user_id")
+
+    ftx_client = ftxWrapper.FtxClient(api_key=api_key, api_secret=api_secret)
+
+    clientPortfoliosDB.persist_portfolio_snapshot(
+        database=database, ftx_client=ftx_client, client_id=user_id)
+
+    return json.dumps({"status": 200})
+
+
+@app.route("/ftx/series/portfolio_snapshots")
+def ftx_get_portfolio_snapshots():
+
+    args = request.args
+
+    # TODO we should return error if these query params are not available!
+    user_id = args.get("user_id")
+
+    portfolio_snapshots = clientPortfoliosDB.get_portfolio_snapshots(
+        database=database, client_id=user_id)
+
+    return json.dumps(portfolio_snapshots, default=default)
+
+
+@app.route("/ftx/series/portfolio_value")
+def ftx_get_portfolio_value_series():
+
+    args = request.args
+
+    # TODO we should return error if these query params are not available!
+    user_id = args.get("user_id")
+
+    portfolio_value_series = clientPortfoliosDB.get_portfolio_value_series(
+        database=database, client_id=user_id)
+
+    return json.dumps(portfolio_value_series, default=default)
 
 
 if __name__ == '__main__':

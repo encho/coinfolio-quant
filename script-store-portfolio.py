@@ -23,7 +23,7 @@ FTX_API_KEY = os.environ["FTX_API_KEY"]
 FTX_API_SECRET = os.environ["FTX_API_SECRET"]
 
 
-def make_portfolio_snapshot_item_for_database(api_key, positions):
+def make_portfolio_snapshot_item_for_database(client_id, positions):
 
     portfolio_usd_value = 0
     for position in positions:
@@ -32,7 +32,7 @@ def make_portfolio_snapshot_item_for_database(api_key, positions):
         portfolio_usd_value = portfolio_usd_value + position["usd_value"]
 
     portfolio_item = {
-        "api_key": api_key,
+        "client_id": client_id,
         "timestamp": datetime.datetime.now(),
         "usd_value": portfolio_usd_value,
         "positions": positions,
@@ -48,11 +48,10 @@ portfolio_snapshots_collection = database["portfolio_snapshots"]
 ftx_client = FtxClient(api_key=FTX_API_KEY, api_secret=FTX_API_SECRET)
 
 positions = ftx_client.get_positions()
-
-
 pprint(positions)
 
 
+# TODO we need the user id information too!
 def persist_portfolio_snapshot(database, ftx_client):
     portfolio_snapshots_collection = database["portfolio_snapshots"]
     api_key = ftx_client._api_key
@@ -62,6 +61,7 @@ def persist_portfolio_snapshot(database, ftx_client):
     portfolio_snapshots_collection.insert_one(portfolio_snapshot_item)
 
 
+# TODO use clientId/userId as identifier instead of api_key!
 def get_portfolio_snapshots(database, api_key):
     portfolio_snapshots_collection = database["portfolio_snapshots"]
     query_object = {"api_key": api_key}
@@ -70,4 +70,8 @@ def get_portfolio_snapshots(database, api_key):
 
 
 # persist_portfolio_snapshot(database, ftx_client)
-get_portfolio_snapshots(database, FTX_API_KEY)
+# get_portfolio_snapshots(database, FTX_API_KEY)
+
+historical_balances = ftx_client.get_historical_balances()
+
+pprint(historical_balances)

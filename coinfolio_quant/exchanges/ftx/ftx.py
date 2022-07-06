@@ -73,6 +73,7 @@ class FtxClient:
     def get_open_orders(self, order_id: int, market: str = None) -> List[dict]:
         return self._get(f'orders', {'market': market, 'order_id': order_id})
 
+
     def execute_liquidation(self, ticker: str, size: float, into: str = 'USD', client_id: str = None):
         # e.g. BTC/USD
         market = ticker + "/" + into
