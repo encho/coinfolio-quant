@@ -1,41 +1,9 @@
-# import coinfolio_quant.datalake.cryptocurrencies as cryptocurrencies
-# import coinfolio_quant.datalake.strategies as strategies
-
-# import datalake.cryptocurrencies as cryptocurrencies
-# import datalake.strategies as strategies
-
+from cmath import nan
 from prettyprinter import pprint
 import pandas as pd
 import numpy as np
 from pymongo import DESCENDING
-
-
-# TODO into backtest utils package, s.t. the functions can be used everywhere (e.g. etl, scripts, etc..)
-def prices_to_returns(prices_series):
-    return np.log(prices_series/prices_series.shift())
-
-
-# TODO into backtest utils package, s.t. the functions can be used everywhere (e.g. etl, scripts, etc..)
-def sharpe_ratio(prices_series, ann_factor=365):
-    returns_series = prices_to_returns(prices_series)
-    sr = returns_series.mean() / returns_series.std()
-    ann_sr = sr * ann_factor**0.5
-    return ann_sr
-
-
-# TODO into backtest utils package, s.t. the functions can be used everywhere (e.g. etl, scripts, etc..)
-def total_return(prices_series):
-    last_price = prices_series.iloc[-1]
-    first_price = prices_series.iloc[0]
-    return (last_price - first_price) / first_price
-
-
-# TODO into backtest utils package, s.t. the functions can be used everywhere (e.g. etl, scripts, etc..)
-def annualized_return(prices_series, ann_factor=365):
-    returns_series = prices_to_returns(prices_series)
-    mean_return = returns_series.mean()
-    ann_mean_return = ann_factor * mean_return
-    return ann_mean_return
+from ..quant_utils import performance_metrics as pmetrics
 
 
 # TODO sort date ascending
@@ -137,7 +105,7 @@ def get_strategy_latest_weights(database, strategy_ticker):
     return result_list[0]
 
 
-def get_performance_metrics(database, strategy_ticker):
+def get_performance_total_value_series(database, strategy_ticker):
     backtest_total_value_series = get_strategy_backtests_series__total_value(
         database, strategy_ticker)
 
@@ -147,11 +115,15 @@ def get_performance_metrics(database, strategy_ticker):
 
     total_values_series = pd.Series(series_total_values, index=series_dates)
 
-    performance_metrics = {
-        "sharpe_ratio": sharpe_ratio(total_values_series),
-        "total_return": total_return(total_values_series),
-        "annualized_return": annualized_return(total_values_series),
-    }
+    return total_values_series
+
+
+def get_performance_metrics(database, strategy_ticker):
+    total_values_series = get_performance_total_value_series(
+        database, strategy_ticker)
+
+    performance_metrics = pmetrics.series_performance_metrics(
+        total_values_series)
 
     return {
         "ticker": strategy_ticker,
