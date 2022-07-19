@@ -1,41 +1,9 @@
-# import coinfolio_quant.datalake.cryptocurrencies as cryptocurrencies
-# import coinfolio_quant.datalake.strategies as strategies
-
-# import datalake.cryptocurrencies as cryptocurrencies
-# import datalake.strategies as strategies
-
 from prettyprinter import pprint
 import pandas as pd
-import numpy as np
 from pymongo import DESCENDING
-
-
-# TODO into backtest utils package, s.t. the functions can be used everywhere (e.g. etl, scripts, etc..)
-def prices_to_returns(prices_series):
-    return np.log(prices_series/prices_series.shift())
-
-
-# TODO into backtest utils package, s.t. the functions can be used everywhere (e.g. etl, scripts, etc..)
-def sharpe_ratio(prices_series, ann_factor=365):
-    returns_series = prices_to_returns(prices_series)
-    sr = returns_series.mean() / returns_series.std()
-    ann_sr = sr * ann_factor**0.5
-    return ann_sr
-
-
-# TODO into backtest utils package, s.t. the functions can be used everywhere (e.g. etl, scripts, etc..)
-def total_return(prices_series):
-    last_price = prices_series.iloc[-1]
-    first_price = prices_series.iloc[0]
-    return (last_price - first_price) / first_price
-
-
-# TODO into backtest utils package, s.t. the functions can be used everywhere (e.g. etl, scripts, etc..)
-def annualized_return(prices_series, ann_factor=365):
-    returns_series = prices_to_returns(prices_series)
-    mean_return = returns_series.mean()
-    ann_mean_return = ann_factor * mean_return
-    return ann_mean_return
+import datetime
+from ..quant_utils import performance_metrics as pmetrics
+from ..quant_utils import date_utils
 
 
 # TODO sort date ascending
@@ -137,7 +105,7 @@ def get_strategy_latest_weights(database, strategy_ticker):
     return result_list[0]
 
 
-def get_performance_metrics(database, strategy_ticker):
+def get_performance_total_value_series(database, strategy_ticker):
     backtest_total_value_series = get_strategy_backtests_series__total_value(
         database, strategy_ticker)
 
@@ -147,15 +115,72 @@ def get_performance_metrics(database, strategy_ticker):
 
     total_values_series = pd.Series(series_total_values, index=series_dates)
 
-    performance_metrics = {
-        "sharpe_ratio": sharpe_ratio(total_values_series),
-        "total_return": total_return(total_values_series),
-        "annualized_return": annualized_return(total_values_series),
-    }
+    return total_values_series
+
+
+def get_performance_metrics(database, strategy_ticker):
+    total_values_series = get_performance_total_value_series(
+        database, strategy_ticker)
+
+    performance_metrics = pmetrics.series_performance_metrics(
+        total_values_series)
 
     return {
         "ticker": strategy_ticker,
         "start_date": total_values_series.index[0].to_pydatetime(),
         "end_date": total_values_series.index[-1].to_pydatetime(),
         "performance_metrics": performance_metrics,
+    }
+
+
+def get_total_returns_table(database, strategy_ticker):
+    total_values_series = get_performance_total_value_series(
+        database, strategy_ticker)
+
+    first_timestamp_index = total_values_series.index[0]
+    last_timestamp_index = total_values_series.index[-1]
+
+    start_date_QTD_datetime = date_utils.get_first_day_of_the_quarter(
+        last_timestamp_index.to_pydatetime())
+    start_date_QTD_timestamp = pd.Timestamp(start_date_QTD_datetime)
+
+    cumulative_return_QTD = pmetrics.total_return(
+        total_values_series.loc[start_date_QTD_timestamp:])
+
+    start_date_YTD_datetime = date_utils.get_first_day_of_the_year(
+        last_timestamp_index.to_pydatetime())
+    start_date_YTD_timestamp = pd.Timestamp(start_date_YTD_datetime)
+    cumulative_return_YTD = pmetrics.total_return(
+        total_values_series.loc[start_date_YTD_timestamp:])
+
+    # years_back_to_try = [1, 3, 5, 10]
+    years_back_to_try = [1, 2, 3, 5, 10]
+    annualized_returns_list = []
+    for year_back in years_back_to_try:
+        year_back_timestamp = pd.Timestamp(date_utils.get_years_back_datetime(
+            last_timestamp_index.to_pydatetime(), year_back))
+        if first_timestamp_index < year_back_timestamp:
+            annualized_returns_list.append({
+                "label": f'{year_back}Y',
+                "start_date": year_back_timestamp,
+                "end_date": last_timestamp_index,
+                "percentage_return": pmetrics.annualized_return(
+                    total_values_series.loc[year_back_timestamp:], ann_factor=365)})
+
+    # always add since inception
+    annualized_returns_list.append({
+        "label": "INCEPTION",
+        "start_date": first_timestamp_index,
+        "end_date": last_timestamp_index,
+        "percentage_return": pmetrics.annualized_return(
+            total_values_series, ann_factor=365)})
+
+    return {
+        "cumulative_returns": [
+            {"label": "QTD", "start_date": start_date_QTD_timestamp,
+                "end_date": last_timestamp_index, "percentage_return": cumulative_return_QTD},
+            {"label": "YTD", "start_date": start_date_YTD_timestamp,
+                "end_date": last_timestamp_index, "percentage_return": cumulative_return_YTD},
+        ],
+        "annualized_returns": annualized_returns_list
     }
