@@ -82,6 +82,14 @@ def get_strategy_performance_metrics(ticker):
     return json.dumps(current_strategy_performance_metrics, default=default)
 
 
+@app.route('/strategies/total_returns_table/<ticker>')
+def get_strategy_total_returns_table(ticker):
+    total_returns_table = backtestsDB.get_total_returns_table(
+        database, ticker)
+
+    return json.dumps(total_returns_table, default=default)
+
+
 @app.route('/strategies/series/backtests/total_value')
 def get_strategy_backtests_series__all__total_value():
     strategy_backtests_series_dataframe = backtestsDB.get_strategy_backtests_series__all__total_value(
