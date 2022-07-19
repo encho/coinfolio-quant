@@ -3,6 +3,7 @@ import pandas as pd
 from pymongo import DESCENDING
 import datetime
 from ..quant_utils import performance_metrics as pmetrics
+from ..quant_utils import date_utils
 
 
 # TODO sort date ascending
@@ -131,54 +132,6 @@ def get_performance_metrics(database, strategy_ticker):
         "performance_metrics": performance_metrics,
     }
 
-# TODO into datetime utils
-
-
-def get_first_day_of_the_quarter(p_date: datetime.date):
-    return datetime.datetime(p_date.year, 3 * ((p_date.month - 1) // 3) + 1, 1)
-
-
-assert get_first_day_of_the_quarter(datetime.datetime(
-    2020, 10, 5).date()) == datetime.datetime(2020, 10, 1)
-assert get_first_day_of_the_quarter(datetime.datetime(
-    2020, 9, 25).date()) == datetime.datetime(2020, 7, 1)
-assert get_first_day_of_the_quarter(datetime.datetime(
-    2020, 12, 11).date()) == datetime.datetime(2020, 10, 1)
-assert get_first_day_of_the_quarter(datetime.datetime(
-    2020, 1, 2).date()) == datetime.datetime(2020, 1, 1)
-
-
-def get_first_day_of_the_year(p_date: datetime.date):
-    return datetime.datetime(p_date.year, 1, 1)
-
-
-assert get_first_day_of_the_year(datetime.datetime(
-    2020, 10, 5).date()) == datetime.datetime(2020, 1, 1)
-assert get_first_day_of_the_year(datetime.datetime(
-    2022, 1, 3).date()) == datetime.datetime(2022, 1, 1)
-
-
-def get_past_datetime_1Y(p_date: datetime.date):
-    return datetime.datetime(p_date.year - 1, p_date.month, p_date.day)
-
-
-assert get_past_datetime_1Y(datetime.datetime(
-    2020, 10, 5).date()) == datetime.datetime(2019, 10, 5)
-
-
-def get_years_back_datetime(p_date: datetime.date, years_back: int):
-    return datetime.datetime(p_date.year - years_back, p_date.month, p_date.day)
-
-
-assert get_years_back_datetime(datetime.datetime(
-    2020, 10, 5).date(), 1) == datetime.datetime(2019, 10, 5)
-
-assert get_years_back_datetime(datetime.datetime(
-    2020, 10, 5).date(), 2) == datetime.datetime(2018, 10, 5)
-
-assert get_years_back_datetime(datetime.datetime(
-    2020, 10, 5).date(), 0) == datetime.datetime(2020, 10, 5)
-
 
 def get_total_returns_table(database, strategy_ticker):
     total_values_series = get_performance_total_value_series(
@@ -187,30 +140,24 @@ def get_total_returns_table(database, strategy_ticker):
     first_timestamp_index = total_values_series.index[0]
     last_timestamp_index = total_values_series.index[-1]
 
-    start_date_QTD_datetime = get_first_day_of_the_quarter(
+    start_date_QTD_datetime = date_utils.get_first_day_of_the_quarter(
         last_timestamp_index.to_pydatetime())
     start_date_QTD_timestamp = pd.Timestamp(start_date_QTD_datetime)
 
     cumulative_return_QTD = pmetrics.total_return(
         total_values_series.loc[start_date_QTD_timestamp:])
 
-    start_date_YTD_datetime = get_first_day_of_the_year(
+    start_date_YTD_datetime = date_utils.get_first_day_of_the_year(
         last_timestamp_index.to_pydatetime())
     start_date_YTD_timestamp = pd.Timestamp(start_date_YTD_datetime)
     cumulative_return_YTD = pmetrics.total_return(
         total_values_series.loc[start_date_YTD_timestamp:])
 
-    start_date_1Y_datetime = get_years_back_datetime(
-        last_timestamp_index.to_pydatetime(), 1)
-    start_date_1Y_timestamp = pd.Timestamp(start_date_1Y_datetime)
-    annualized_return_1Y = pmetrics.annualized_return(
-        total_values_series.loc[start_date_YTD_timestamp:], ann_factor=365)
-
     # years_back_to_try = [1, 3, 5, 10]
     years_back_to_try = [1, 2, 3, 5, 10]
     annualized_returns_list = []
     for year_back in years_back_to_try:
-        year_back_timestamp = pd.Timestamp(get_years_back_datetime(
+        year_back_timestamp = pd.Timestamp(date_utils.get_years_back_datetime(
             last_timestamp_index.to_pydatetime(), year_back))
         if first_timestamp_index < year_back_timestamp:
             annualized_returns_list.append({
@@ -235,9 +182,5 @@ def get_total_returns_table(database, strategy_ticker):
             {"label": "YTD", "start_date": start_date_YTD_timestamp,
                 "end_date": last_timestamp_index, "percentage_return": cumulative_return_YTD},
         ],
-        # "annualized_returns": [
-        #     {"label": "1Y", "start_date": start_date_1Y_timestamp,
-        #         "end_date": last_timestamp_index, "percentage_return": annualized_return_1Y},
-        # ]
         "annualized_returns": annualized_returns_list
     }
