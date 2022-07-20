@@ -44,6 +44,14 @@ def get_single_long_only_asset_allocation(date, universe):
     return [{"ticker": universe[0], "weight": 1}]
 
 
+def get_inverted_volatility_asset_allocation(date, universe):
+
+    # TODO calculate 360-day volas for the universe in correct order
+    # universe_volas = [0.3, 0.15]
+
+    return [{"ticker": universe[0], "weight": 0.8}, {"ticker": universe[1], "weight": 0.2}]
+
+
 STRATEGIES_SPECS = [
     # {
     #     "ticker": "G4_EQUALLY_WEIGHTED",
@@ -64,6 +72,11 @@ STRATEGIES_SPECS = [
         "ticker": "BITCOIN_ONLY",
         "get_universe": get_bitcoin_only_universe,
         "get_weights": get_single_long_only_asset_allocation
+    },
+    {
+        "ticker": "CFGB1",
+        "get_universe": get_gold_crypto_universe,
+        "get_weights": get_inverted_volatility_asset_allocation
     },
     {
         "ticker": "GOLD_CRYPTO_60_40",

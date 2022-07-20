@@ -80,6 +80,11 @@ STRATEGIES = [
         "description": "Bitcoin Long Only Strategy Description",
     },
     {
+        "ticker": "CFGB1",
+        "name": "Coinfolio Bitcoin & Gold Balanced Index",
+        "description": "Coinfolio Bitcoin & Gold Balanced Index (Description)",
+    },
+    {
         "ticker": "GOLD_CRYPTO_60_40",
         "name": "Gold Crypto 60-40 Basket",
         "description": "Gold & Crypto Portfolio 60/40",
