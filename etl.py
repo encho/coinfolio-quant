@@ -1,12 +1,11 @@
 import os
 import datetime
 from pymongo import MongoClient
-from etl import load_crypto_ohlc_series
-from etl.load_strategy_weights import create_strategy_weights
-import datalake.strategies as strategiesDB
-import datalake.cryptocurrencies as cryptocurrenciesDB
-# import datalake.backtest as datalake_backtest
-import portfolio.backtest as backtest
+from coinfolio_quant.etl import load_crypto_ohlc_series
+from coinfolio_quant.etl.load_strategy_weights import create_strategy_weights
+import coinfolio_quant.datalake.strategies as strategiesDB
+import coinfolio_quant.datalake.cryptocurrencies as cryptocurrenciesDB
+import coinfolio_quant.portfolio.backtest as backtest
 from prettyprinter import pprint
 import functools
 
@@ -35,53 +34,66 @@ MONGO_CONNECTION_STRING = os.environ["MONGO_CONNECTION_STRING"]
 # START_DATE = "2018-01-01"
 # START_DATE = "2022-06-01"
 # START_DATE = "2020-08-30"
-START_DATE = "2020-01-02"
-END_DATE = "2022-06-21"
+# START_DATE = "2020-01-02"
+# START_DATE = "2019-01-01"
+
+# ???
+# START_DATE = "2019-01-05"
+# START_DATE = "2017-01-01"
+# START_DATE = "2017-01-03"
+START_DATE = "2014-09-17"  # not there for eth
+# START_DATE = "2018-01-10"
+# END_DATE = "2015-03-01"
+# END_DATE = "2015-03-01" # this was sunday created problems on xau
+# END_DATE = "2018-06-02"
+# END_DATE = "2019-06-06"
+END_DATE = "2022-07-18"
 
 CRYPTOCURRENCIES = [
     {"ticker": "BTC-USD", "base": "BTC", "quote": "USD", "yahoo_ticker": "BTC-USD"},
-    {"ticker": "ETH-USD", "base": "ETH", "quote": "USD", "yahoo_ticker": "ETH-USD"},
-    {"ticker": "XRP-USD", "base": "XRP", "quote": "USD", "yahoo_ticker": "XRP-USD"},
-    {"ticker": "ADA-USD", "base": "ADA", "quote": "USD", "yahoo_ticker": "ADA-USD"},
+    # {"ticker": "ETH-USD", "base": "ETH", "quote": "USD", "yahoo_ticker": "ETH-USD"},
+    # {"ticker": "XRP-USD", "base": "XRP", "quote": "USD", "yahoo_ticker": "XRP-USD"},
+    # {"ticker": "ADA-USD", "base": "ADA", "quote": "USD", "yahoo_ticker": "ADA-USD"},
     {"ticker": "XAU-USD", "base": "XAU", "quote": "USD", "yahoo_ticker": "GC=F"},
-    # {"ticker": "BTC-EUR", "base": "BTC", "quote": "EUR"},
-    # {"ticker": "ETH-EUR", "base": "ETH", "quote": "EUR"},
-    # {"ticker": "XRP-EUR", "base": "XRP", "quote": "EUR"},
-    # {"ticker": "ADA-EUR", "base": "ADA", "quote": "EUR"},
 ]
 
 
 STRATEGIES = [
+    # {
+    #     "ticker": "G4_EQUALLY_WEIGHTED",
+    #     "name": "Equally Weighted G4 Basket",
+    #     "description": "Equally weighted portfolio of 4 main cryptocurrencies.",
+    # },
+    # {
+    #     "ticker": "G2_EQUALLY_WEIGHTED",
+    #     "name": "Equally Weighted G2 Basket",
+    #     "description": "Equally weighted portfolio of 2 main cryptocurrencies.",
+    # },
+    # {
+    #     "ticker": "GOLD_CRYPTO_50_50",
+    #     "name": "Gold Crypto 50-50 Basket",
+    #     "description": "Gold & Crypto Portfolio 50/50",
+    # },
     {
-        "ticker": "G4_EQUALLY_WEIGHTED",
-        "name": "Equally Weighted G4 Basket",
-        "description": "Equally weighted portfolio of 4 main cryptocurrencies.",
-    },
-    {
-        "ticker": "G2_EQUALLY_WEIGHTED",
-        "name": "Equally Weighted G2 Basket",
-        "description": "Equally weighted portfolio of 2 main cryptocurrencies.",
-    },
-    {
-        "ticker": "GOLD_CRYPTO_50_50",
-        "name": "Gold Crypto 50-50 Basket",
-        "description": "Gold & Crypto Portfolio 50/50",
+        "ticker": "BITCOIN_ONLY",
+        "name": "Bitcoin Long Only Strategy",
+        "description": "Bitcoin Long Only Strategy Description",
     },
     {
         "ticker": "GOLD_CRYPTO_60_40",
         "name": "Gold Crypto 60-40 Basket",
         "description": "Gold & Crypto Portfolio 60/40",
     },
-    {
-        "ticker": "GOLD_CRYPTO_70_30",
-        "name": "Gold Crypto 70-30 Basket",
-        "description": "Gold & Crypto Portfolio 70/30",
-    },
-    {
-        "ticker": "COINFOLIO_GOLD_CRYPTO",
-        "name": "Gold Crypto Basket",
-        "description": "Gold & Crypto Portfolio",
-    },
+    # {
+    #     "ticker": "GOLD_CRYPTO_70_30",
+    #     "name": "Gold Crypto 70-30 Basket",
+    #     "description": "Gold & Crypto Portfolio 70/30",
+    # },
+    # {
+    #     "ticker": "COINFOLIO_GOLD_CRYPTO",
+    #     "name": "Gold Crypto Basket",
+    #     "description": "Gold & Crypto Portfolio",
+    # },
 ]
 
 # TODO eventually close connection at end of script

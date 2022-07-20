@@ -2,6 +2,10 @@ import yfinance as yf
 import progressbar
 
 
+def get_bitcoin_only_universe(date):
+    return ["BTC"]
+
+
 def get_g4_universe(date):
     return ["BTC", "ETH", "XRP", "ADA"]
 
@@ -35,37 +39,47 @@ def get_coinfolio_gold_crypto_asset_allocation(date, universe):
     return [{"ticker": ticker, "weight": 0.6 if ticker == "XAU" else 0.4/4} for ticker in universe]
 
 
+def get_single_long_only_asset_allocation(date, universe):
+    # TODO throw error if universe longer than 1
+    return [{"ticker": universe[0], "weight": 1}]
+
+
 STRATEGIES_SPECS = [
+    # {
+    #     "ticker": "G4_EQUALLY_WEIGHTED",
+    #     "get_universe": get_g4_universe,
+    #     "get_weights": get_equally_weighted_asset_allocation
+    # },
+    # {
+    #     "ticker": "G2_EQUALLY_WEIGHTED",
+    #     "get_universe": get_g2_universe,
+    #     "get_weights": get_equally_weighted_asset_allocation
+    # },
+    # {
+    #     "ticker": "GOLD_CRYPTO_50_50",
+    #     "get_universe": get_gold_crypto_universe,
+    #     "get_weights": get_equally_weighted_asset_allocation
+    # },
     {
-        "ticker": "G4_EQUALLY_WEIGHTED",
-        "get_universe": get_g4_universe,
-        "get_weights": get_equally_weighted_asset_allocation
-    },
-    {
-        "ticker": "G2_EQUALLY_WEIGHTED",
-        "get_universe": get_g2_universe,
-        "get_weights": get_equally_weighted_asset_allocation
-    },
-    {
-        "ticker": "GOLD_CRYPTO_50_50",
-        "get_universe": get_gold_crypto_universe,
-        "get_weights": get_equally_weighted_asset_allocation
+        "ticker": "BITCOIN_ONLY",
+        "get_universe": get_bitcoin_only_universe,
+        "get_weights": get_single_long_only_asset_allocation
     },
     {
         "ticker": "GOLD_CRYPTO_60_40",
         "get_universe": get_gold_crypto_universe,
         "get_weights": get_60_40_asset_allocation
     },
-    {
-        "ticker": "GOLD_CRYPTO_70_30",
-        "get_universe": get_gold_crypto_universe,
-        "get_weights": get_70_30_asset_allocation
-    },
-    {
-        "ticker": "COINFOLIO_GOLD_CRYPTO",
-        "get_universe": get_coinfolio_gold_crypto_universe,
-        "get_weights": get_coinfolio_gold_crypto_asset_allocation
-    }
+    # {
+    #     "ticker": "GOLD_CRYPTO_70_30",
+    #     "get_universe": get_gold_crypto_universe,
+    #     "get_weights": get_70_30_asset_allocation
+    # },
+    # {
+    #     "ticker": "COINFOLIO_GOLD_CRYPTO",
+    #     "get_universe": get_coinfolio_gold_crypto_universe,
+    #     "get_weights": get_coinfolio_gold_crypto_asset_allocation
+    # }
 ]
 
 

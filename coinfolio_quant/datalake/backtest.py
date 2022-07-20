@@ -42,36 +42,41 @@ def get_strategy_backtests_series__total_value(database, strategy_ticker, start_
 
 # TODO: import strategies db module, s.t. etl also still works (and scripts!!!!)
 STRATEGIES = [
-    {
-        "ticker": "G4_EQUALLY_WEIGHTED",
-        "name": "Equally Weighted G4 Basket",
-        "description": "Equally weighted portfolio of 4 main cryptocurrencies.",
-    },
-    {
-        "ticker": "G2_EQUALLY_WEIGHTED",
-        "name": "Equally Weighted G2 Basket",
-        "description": "Equally weighted portfolio of 2 main cryptocurrencies.",
-    },
-    {
-        "ticker": "GOLD_CRYPTO_50_50",
-        "name": "Gold & Bitcoin 50-50 Basket",
-        "description": "Gold & Bitcoin Portfolio 50%-50%",
-    },
+    # {
+    #     "ticker": "G4_EQUALLY_WEIGHTED",
+    #     "name": "Equally Weighted G4 Basket",
+    #     "description": "Equally weighted portfolio of 4 main cryptocurrencies.",
+    # },
+    # {
+    #     "ticker": "G2_EQUALLY_WEIGHTED",
+    #     "name": "Equally Weighted G2 Basket",
+    #     "description": "Equally weighted portfolio of 2 main cryptocurrencies.",
+    # },
+    # {
+    #     "ticker": "GOLD_CRYPTO_50_50",
+    #     "name": "Gold & Bitcoin 50-50 Basket",
+    #     "description": "Gold & Bitcoin Portfolio 50%-50%",
+    # },
     {
         "ticker": "GOLD_CRYPTO_60_40",
         "name": "Gold & Bitcoin 60-40 Basket",
         "description": "Gold & Bitcoin Portfolio 60%-40%",
     },
     {
-        "ticker": "GOLD_CRYPTO_70_30",
-        "name": "Gold & Bitcoin 70-30 Basket",
-        "description": "Gold & Bitcoin Portfolio 70%-30%",
+        "ticker": "BITCOIN_ONLY",
+        "name": "Bitcoin Long Only Strategy",
+        "description": "Bitcoin Long Only Strategy Description",
     },
-    {
-        "ticker": "COINFOLIO_GOLD_CRYPTO",
-        "name": "Gold Crypto",
-        "description": "Gold & Crypto Portfolio",
-    }
+    # {
+    #     "ticker": "GOLD_CRYPTO_70_30",
+    #     "name": "Gold & Bitcoin 70-30 Basket",
+    #     "description": "Gold & Bitcoin Portfolio 70%-30%",
+    # },
+    # {
+    #     "ticker": "COINFOLIO_GOLD_CRYPTO",
+    #     "name": "Gold Crypto",
+    #     "description": "Gold & Crypto Portfolio",
+    # }
 ]
 
 
@@ -122,14 +127,29 @@ def get_performance_metrics(database, strategy_ticker):
     total_values_series = get_performance_total_value_series(
         database, strategy_ticker)
 
+    benchmark_total_values_series = get_performance_total_value_series(
+        database, "BITCOIN_ONLY")
+
+    first_timestamp_index = total_values_series.index[0]
+    last_timestamp_index = total_values_series.index[-1]
+
+    truncated_benchmark_total_values_series = benchmark_total_values_series.loc[
+        first_timestamp_index:last_timestamp_index]
+
     performance_metrics = pmetrics.series_performance_metrics(
         total_values_series)
+
+
+    benchmark_performance_metrics = pmetrics.series_performance_metrics(
+        truncated_benchmark_total_values_series)
+
 
     return {
         "ticker": strategy_ticker,
         "start_date": total_values_series.index[0].to_pydatetime(),
         "end_date": total_values_series.index[-1].to_pydatetime(),
         "performance_metrics": performance_metrics,
+        "benchmark_performance_metrics": benchmark_performance_metrics
     }
 
 
@@ -137,9 +157,13 @@ def get_total_returns_table(database, strategy_ticker):
     total_values_series = get_performance_total_value_series(
         database, strategy_ticker)
 
+    benchmark_total_values_series = get_performance_total_value_series(
+        database, "BITCOIN_ONLY")
+
     first_timestamp_index = total_values_series.index[0]
     last_timestamp_index = total_values_series.index[-1]
 
+    # QTD data
     start_date_QTD_datetime = date_utils.get_first_day_of_the_quarter(
         last_timestamp_index.to_pydatetime())
     start_date_QTD_timestamp = pd.Timestamp(start_date_QTD_datetime)
@@ -147,11 +171,19 @@ def get_total_returns_table(database, strategy_ticker):
     cumulative_return_QTD = pmetrics.total_return(
         total_values_series.loc[start_date_QTD_timestamp:])
 
+    benchmark_cumulative_return_QTD = pmetrics.total_return(
+        benchmark_total_values_series.loc[start_date_QTD_timestamp:])
+
+    # YTD data
     start_date_YTD_datetime = date_utils.get_first_day_of_the_year(
         last_timestamp_index.to_pydatetime())
     start_date_YTD_timestamp = pd.Timestamp(start_date_YTD_datetime)
+
     cumulative_return_YTD = pmetrics.total_return(
         total_values_series.loc[start_date_YTD_timestamp:])
+
+    benchmark_cumulative_return_YTD = pmetrics.total_return(
+        benchmark_total_values_series.loc[start_date_YTD_timestamp:])
 
     # years_back_to_try = [1, 3, 5, 10]
     years_back_to_try = [1, 2, 3, 5, 10]
@@ -165,7 +197,10 @@ def get_total_returns_table(database, strategy_ticker):
                 "start_date": year_back_timestamp,
                 "end_date": last_timestamp_index,
                 "percentage_return": pmetrics.annualized_return(
-                    total_values_series.loc[year_back_timestamp:], ann_factor=365)})
+                    total_values_series.loc[year_back_timestamp:], ann_factor=365),
+                "benchmark_percentage_return": pmetrics.annualized_return(
+                    benchmark_total_values_series.loc[year_back_timestamp:], ann_factor=365),
+            })
 
     # always add since inception
     annualized_returns_list.append({
@@ -173,14 +208,27 @@ def get_total_returns_table(database, strategy_ticker):
         "start_date": first_timestamp_index,
         "end_date": last_timestamp_index,
         "percentage_return": pmetrics.annualized_return(
-            total_values_series, ann_factor=365)})
+            total_values_series, ann_factor=365),
+        "benchmark_percentage_return": pmetrics.annualized_return(
+            benchmark_total_values_series.loc[first_timestamp_index:last_timestamp_index], ann_factor=365),
+    })
 
     return {
         "cumulative_returns": [
-            {"label": "QTD", "start_date": start_date_QTD_timestamp,
-                "end_date": last_timestamp_index, "percentage_return": cumulative_return_QTD},
-            {"label": "YTD", "start_date": start_date_YTD_timestamp,
-                "end_date": last_timestamp_index, "percentage_return": cumulative_return_YTD},
+            {
+                "label": "QTD",
+                "start_date": start_date_QTD_timestamp,
+                "end_date": last_timestamp_index,
+                "percentage_return": cumulative_return_QTD,
+                "benchmark_percentage_return": benchmark_cumulative_return_QTD
+            },
+            {
+                "label": "YTD",
+                "start_date": start_date_YTD_timestamp,
+                "end_date": last_timestamp_index,
+                "percentage_return": cumulative_return_YTD,
+                "benchmark_percentage_return": benchmark_cumulative_return_YTD
+            },
         ],
         "annualized_returns": annualized_returns_list
     }
