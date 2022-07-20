@@ -139,10 +139,8 @@ def get_performance_metrics(database, strategy_ticker):
     performance_metrics = pmetrics.series_performance_metrics(
         total_values_series)
 
-
     benchmark_performance_metrics = pmetrics.series_performance_metrics(
         truncated_benchmark_total_values_series)
-
 
     return {
         "ticker": strategy_ticker,
@@ -185,8 +183,7 @@ def get_total_returns_table(database, strategy_ticker):
     benchmark_cumulative_return_YTD = pmetrics.total_return(
         benchmark_total_values_series.loc[start_date_YTD_timestamp:])
 
-    # years_back_to_try = [1, 3, 5, 10]
-    years_back_to_try = [1, 2, 3, 5, 10]
+    years_back_to_try = [1, 3, 5, 10]
     annualized_returns_list = []
     for year_back in years_back_to_try:
         year_back_timestamp = pd.Timestamp(date_utils.get_years_back_datetime(
