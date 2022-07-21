@@ -31,34 +31,50 @@ def get_dates_for_period(start_date_string, end_date_string):
 MONGO_CONNECTION_STRING = os.environ["MONGO_CONNECTION_STRING"]
 
 # TODO have this as datetime object, yahoo fetching function needs to transform this into string eventually
-# START_DATE = "2018-01-01"
-# START_DATE = "2022-06-01"
-# START_DATE = "2020-08-30"
-# START_DATE = "2020-01-02"
-# START_DATE = "2019-01-01"
-
-# ???
-# START_DATE = "2019-01-05"
-# START_DATE = "2017-01-01"
-# START_DATE = "2017-01-03"
+# long backtest
 START_DATE = "2014-09-17"  # not there for eth
-# START_DATE = "2018-01-10"
-# END_DATE = "2015-03-01"
-# END_DATE = "2015-03-01" # this was sunday created problems on xau
-# END_DATE = "2018-06-02"
-# END_DATE = "2019-06-06"
 END_DATE = "2022-07-18"
+
+# short backtest
+# START_DATE = "2020-01-02"
+# END_DATE = "2020-12-31"
+
 
 CRYPTOCURRENCIES = [
     {"ticker": "BTC-USD", "base": "BTC", "quote": "USD", "yahoo_ticker": "BTC-USD"},
+    {"ticker": "XAU-USD", "base": "XAU", "quote": "USD", "yahoo_ticker": "GC=F"},
     # {"ticker": "ETH-USD", "base": "ETH", "quote": "USD", "yahoo_ticker": "ETH-USD"},
     # {"ticker": "XRP-USD", "base": "XRP", "quote": "USD", "yahoo_ticker": "XRP-USD"},
     # {"ticker": "ADA-USD", "base": "ADA", "quote": "USD", "yahoo_ticker": "ADA-USD"},
-    {"ticker": "XAU-USD", "base": "XAU", "quote": "USD", "yahoo_ticker": "GC=F"},
 ]
 
 
 STRATEGIES = [
+    {
+        "ticker": "BITCOIN_ONLY",
+        "name": "Bitcoin Long Only Strategy",
+        "description": "Bitcoin Long Only Strategy Description",
+        "rebalancing": "DAILY"
+    },
+    {
+        "ticker": "CFGB1",
+        "name": "Coinfolio Bitcoin & Gold Balanced Index",
+        "description": "Coinfolio Bitcoin & Gold Balanced Index (Description)",
+        "rebalancing": "DAILY"
+    },
+    {
+        "ticker": "CFGB2",
+        "name": "Coinfolio Bitcoin & Gold Balanced Index M",
+        "description": "Coinfolio Bitcoin & Gold Balanced Index M (Description)",
+        "rebalancing": "MONTHLY"
+    },
+    {
+        "ticker": "GOLD_CRYPTO_60_40",
+        "name": "Gold Crypto 60-40 Basket",
+        "description": "Gold & Crypto Portfolio 60/40",
+        "rebalancing": "DAILY"
+    },
+    # ===============================================================================
     # {
     #     "ticker": "G4_EQUALLY_WEIGHTED",
     #     "name": "Equally Weighted G4 Basket",
@@ -74,21 +90,6 @@ STRATEGIES = [
     #     "name": "Gold Crypto 50-50 Basket",
     #     "description": "Gold & Crypto Portfolio 50/50",
     # },
-    {
-        "ticker": "BITCOIN_ONLY",
-        "name": "Bitcoin Long Only Strategy",
-        "description": "Bitcoin Long Only Strategy Description",
-    },
-    {
-        "ticker": "CFGB1",
-        "name": "Coinfolio Bitcoin & Gold Balanced Index",
-        "description": "Coinfolio Bitcoin & Gold Balanced Index (Description)",
-    },
-    {
-        "ticker": "GOLD_CRYPTO_60_40",
-        "name": "Gold Crypto 60-40 Basket",
-        "description": "Gold & Crypto Portfolio 60/40",
-    },
     # {
     #     "ticker": "GOLD_CRYPTO_70_30",
     #     "name": "Gold Crypto 70-30 Basket",
@@ -134,16 +135,13 @@ for cryptocurrency in CRYPTOCURRENCIES:
 # clean the database collection
 strategies_weights_collection = database["strategies_weights"]
 strategies_weights_collection.drop()
-# create the history of equal weighted G4/5 strategy!
-# dates_until_today = get_dates_until_today(START_DATE)
-dates_list_for_period = get_dates_for_period(START_DATE, END_DATE)
 
-print(dates_list_for_period)
+dates_list_for_period = get_dates_for_period(START_DATE, END_DATE)
 
 for strategy in STRATEGIES:
     print("creating strategy weights for strategy: " + strategy["ticker"])
     for date in dates_list_for_period:
-        create_strategy_weights(strategies_weights_collection,
+        create_strategy_weights(database,
                                 strategy["ticker"], date)
 
 
@@ -151,8 +149,6 @@ for strategy in STRATEGIES:
 # STRATEGIES BACKTESTS
 # --------------------------------------------------------------------
 # create backtest for the G4 strategy...
-# print("strategies backtests...")
-# pprint(dates_until_today)
 
 strategies_backtests_collection = database["strategies_backtests"]
 strategies_backtests_collection.drop()
@@ -221,7 +217,10 @@ def run_backtest(backtest_data, start_portfolio):
     return portfolios_series
 
 
+# TODO: pass database into here and not strategies_backtests_collection
 def load_backtest_into_database(strategies_backtests_collection, strategy_ticker, start_date, end_date):
+
+    # TODO: get strategy meta info, e.g. rebalancing frequency
 
     first_backtest_date = start_date - datetime.timedelta(days=1)
 
@@ -247,6 +246,7 @@ def load_backtest_into_database(strategies_backtests_collection, strategy_ticker
         "total_commissions_paid": 0,
     }
 
+    # pass strategy metadata into here. e.g. rebalancing frequency
     portfolios_series = run_backtest(backtest_data, portfolio_0)
 
     for portfolio_item in portfolios_series:
@@ -255,8 +255,13 @@ def load_backtest_into_database(strategies_backtests_collection, strategy_ticker
 
 for strategy in STRATEGIES:
     print("creating and loading backtest for: " + strategy["ticker"])
+    strategy_weights_info = strategiesDB.get_strategy_weights_info(
+        database, strategy["ticker"])
+    min_date = strategy_weights_info["min_date"]
+    max_date = strategy_weights_info["max_date"]
+
     load_backtest_into_database(strategies_backtests_collection,
-                                strategy["ticker"], dates_list_for_period[0], dates_list_for_period[-1])
+                                strategy["ticker"], min_date, max_date)
 
 
 client.close()

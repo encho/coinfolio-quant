@@ -290,7 +290,8 @@ def update_positions(positions, transactions):
     return only_positions_greater_zero
 
 
-
+# TODO here we need the rebalancing frequency in context, to determine rebalancing needs
+# TODO here we need to FIX what happens if weights are np.nan --> set to zero?!!
 def create_next_portfolio(portfolio, weights, prices, date):
 
     rebalancing_list = create_rebalancing_list(
@@ -324,4 +325,3 @@ def create_next_portfolio(portfolio, weights, prices, date):
     }
 
     return new_portfolio
-
