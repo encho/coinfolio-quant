@@ -33,7 +33,7 @@ MONGO_CONNECTION_STRING = os.environ["MONGO_CONNECTION_STRING"]
 # TODO have this as datetime object, yahoo fetching function needs to transform this into string eventually
 # long backtest
 START_DATE = "2014-09-17"  # not there for eth
-END_DATE = "2022-07-18"
+END_DATE = "2022-07-22"
 
 # short backtest
 # START_DATE = "2020-01-02"
@@ -57,22 +57,16 @@ STRATEGIES = [
         "rebalancing": "DAILY"
     },
     {
-        "ticker": "CFGB1",
+        "ticker": "CFBG1",
         "name": "Coinfolio Bitcoin & Gold Balanced Index",
         "description": "Coinfolio Bitcoin & Gold Balanced Index (Description)",
-        "rebalancing": "DAILY"
-    },
-    {
-        "ticker": "CFGB2",
-        "name": "Coinfolio Bitcoin & Gold Balanced Index M",
-        "description": "Coinfolio Bitcoin & Gold Balanced Index M (Description)",
         "rebalancing": "MONTHLY"
     },
     {
         "ticker": "GOLD_CRYPTO_60_40",
         "name": "Gold Crypto 60-40 Basket",
         "description": "Gold & Crypto Portfolio 60/40",
-        "rebalancing": "DAILY"
+        "rebalancing": "MONTHLY"
     },
     # ===============================================================================
     # {
@@ -201,14 +195,14 @@ def get_backtest_data(database, strategy_ticker, currency, start_date, end_date)
     return backtest_data_list
 
 
-def run_backtest(backtest_data, start_portfolio):
+def run_backtest(strategy_info, backtest_data, start_portfolio):
     def append_next_porfolio(portfolios_series, backtest_data_item):
         weights = backtest_data_item["weights"]
         prices = backtest_data_item["prices"]
         date = backtest_data_item["date"]
         last_portfolio = portfolios_series[-1]
         next_portfolio = backtest.create_next_portfolio(
-            last_portfolio, weights, prices, date)
+            last_portfolio, weights, prices, date, strategy_info)
         portfolios_series.append(next_portfolio)
         return portfolios_series
 
@@ -217,11 +211,9 @@ def run_backtest(backtest_data, start_portfolio):
     return portfolios_series
 
 
-# TODO: pass database into here and not strategies_backtests_collection
-def load_backtest_into_database(strategies_backtests_collection, strategy_ticker, start_date, end_date):
+def load_backtest_into_database(database, strategy_ticker, start_date, end_date):
 
-    # TODO: get strategy meta info, e.g. rebalancing frequency
-
+    strategy_info = strategiesDB.get_strategy_info(database, strategy_ticker)
     first_backtest_date = start_date - datetime.timedelta(days=1)
 
     backtest_data = get_backtest_data(
@@ -236,7 +228,7 @@ def load_backtest_into_database(strategies_backtests_collection, strategy_ticker
         "strategy_ticker": strategy_ticker,
         "currency": "USD",
         "cash": 10000,
-        "commission": 0.005,
+        "commission": 0.001,
         "positions": [],
         "transactions": [],
         "date": first_backtest_date,
@@ -244,13 +236,14 @@ def load_backtest_into_database(strategies_backtests_collection, strategy_ticker
         "total_value": 10000,
         "commissions_paid": 0,
         "total_commissions_paid": 0,
+        "rebalanced_at": None,
     }
 
     # pass strategy metadata into here. e.g. rebalancing frequency
-    portfolios_series = run_backtest(backtest_data, portfolio_0)
+    portfolios_series = run_backtest(strategy_info, backtest_data, portfolio_0)
 
     for portfolio_item in portfolios_series:
-        strategies_backtests_collection.insert_one(portfolio_item)
+        database["strategies_backtests"].insert_one(portfolio_item)
 
 
 for strategy in STRATEGIES:
@@ -260,7 +253,7 @@ for strategy in STRATEGIES:
     min_date = strategy_weights_info["min_date"]
     max_date = strategy_weights_info["max_date"]
 
-    load_backtest_into_database(strategies_backtests_collection,
+    load_backtest_into_database(database,
                                 strategy["ticker"], min_date, max_date)
 
 

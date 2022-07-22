@@ -29,6 +29,6 @@ def get_strategy_weights_info(database, ticker):
     }
 
 
-info = get_strategy_weights_info(database, "CFGB1")
+info = get_strategy_weights_info(database, "CFBG1")
 
 print(info)

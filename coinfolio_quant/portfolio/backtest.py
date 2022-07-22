@@ -290,12 +290,33 @@ def update_positions(positions, transactions):
     return only_positions_greater_zero
 
 
-# TODO here we need the rebalancing frequency in context, to determine rebalancing needs
-# TODO here we need to FIX what happens if weights are np.nan --> set to zero?!!
-def create_next_portfolio(portfolio, weights, prices, date):
+def get_should_rebalance_DAILY(date, last_rebalance_date):
+    return date > last_rebalance_date
+
+
+def get_should_rebalance_MONTHLY(date, last_rebalance_date):
+    larger_date = date > last_rebalance_date
+    different_month = date.month != last_rebalance_date.month
+    return larger_date and different_month
+
+
+def get_should_rebalance(rebalancing, date, last_rebalance_date):
+    if last_rebalance_date == None:
+        return True
+    if rebalancing == "DAILY":
+        return get_should_rebalance_DAILY(date, last_rebalance_date)
+    if rebalancing == "MONTHLY":
+        return get_should_rebalance_MONTHLY(date, last_rebalance_date)
+
+
+def create_next_portfolio(portfolio, weights, prices, date, strategy_info):
+
+    should_rebalance = get_should_rebalance(
+        strategy_info["rebalancing"], date, portfolio["rebalanced_at"])
 
     rebalancing_list = create_rebalancing_list(
-        portfolio, weights, prices)
+        portfolio, weights, prices) if should_rebalance else []
+
     transactions = create_transactions(
         rebalancing_list, date, portfolio["commission"])
 
@@ -322,6 +343,7 @@ def create_next_portfolio(portfolio, weights, prices, date):
         "total_value": cash + positions_market_value,
         "commissions_paid": transactions_commissions,
         "total_commissions_paid": transactions_commissions + portfolio["commissions_paid"],
+        "rebalanced_at": date if should_rebalance else portfolio["rebalanced_at"]
     }
 
     return new_portfolio

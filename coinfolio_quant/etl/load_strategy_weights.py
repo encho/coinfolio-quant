@@ -113,7 +113,12 @@ STRATEGIES_SPECS = [
         "get_weights": get_single_long_only_asset_allocation,
     },
     {
-        "ticker": "CFGB1",
+        "ticker": "CFBG1",
+        "get_universe": get_gold_crypto_universe,
+        "get_weights": get_inverted_volatility_asset_allocation,
+    },
+    {
+        "ticker": "CFGB2",
         "get_universe": get_gold_crypto_universe,
         "get_weights": get_inverted_volatility_asset_allocation,
     },
