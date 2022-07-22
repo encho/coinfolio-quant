@@ -1,4 +1,5 @@
 import functools
+from pymongo import ASCENDING, DESCENDING
 
 
 def get_overview(database):
@@ -8,8 +9,20 @@ def get_overview(database):
 
 def get_strategy_info(database, ticker):
     result = database.strategies.find_one({"ticker": ticker})
-    print(result)
     return result
+
+
+def get_strategy_weights_info(database, ticker):
+    max_date_result = database.strategies_weights.find(
+        {"ticker": ticker}).sort("date", DESCENDING).limit(1)
+    min_date_result = database.strategies_weights.find(
+        {"ticker": ticker}).sort("date", ASCENDING).limit(1)
+    max_date = list(max_date_result)[0]["date"]
+    min_date = list(min_date_result)[0]["date"]
+    return {
+        "max_date": max_date,
+        "min_date": min_date,
+    }
 
 
 # TODO sort date ascending
