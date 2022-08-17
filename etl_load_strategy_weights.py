@@ -3,7 +3,7 @@
 import datetime
 import pandas as pd
 import numpy as np
-from ..datalake import cryptocurrencies
+import coinfolio_quant.datalake.cryptocurrencies as cryptocurrencies
 
 
 def get_bitcoin_only_universe(date):

@@ -1,8 +1,8 @@
 import os
 import datetime
 from pymongo import MongoClient
-from coinfolio_quant.etl import load_crypto_ohlc_series
-from coinfolio_quant.etl.load_strategy_weights import create_strategy_weights
+import etl_load_crypto_ohlc_series
+from etl_load_strategy_weights import create_strategy_weights
 import coinfolio_quant.datalake.strategies as strategiesDB
 import coinfolio_quant.datalake.cryptocurrencies as cryptocurrenciesDB
 import coinfolio_quant.portfolio.backtest as backtest
@@ -33,12 +33,14 @@ MONGO_CONNECTION_STRING = os.environ["MONGO_CONNECTION_STRING"]
 # TODO have this as datetime object, yahoo fetching function needs to transform this into string eventually
 # long backtest
 START_DATE = "2014-09-17"  # not there for eth
-END_DATE = "2022-07-22"
+END_DATE = "2022-08-16"
 
 # short backtest
 # START_DATE = "2020-01-02"
 # END_DATE = "2020-12-31"
 
+# START_DATE = "2021-08-16"  # not there for eth
+# END_DATE = "2022-08-16"
 
 CRYPTOCURRENCIES = [
     {"ticker": "BTC-USD", "base": "BTC", "quote": "USD", "yahoo_ticker": "BTC-USD"},
@@ -119,7 +121,7 @@ cryptocurrency_quotes_collection = database["cryptocurrency_quotes"]
 cryptocurrency_quotes_collection.drop()
 # insert the quotes
 for cryptocurrency in CRYPTOCURRENCIES:
-    load_crypto_ohlc_series.run(
+    etl_load_crypto_ohlc_series.run(
         cryptocurrency_quotes_collection, cryptocurrency, START_DATE, END_DATE)
 
 
