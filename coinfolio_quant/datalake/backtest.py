@@ -1,9 +1,10 @@
 from prettyprinter import pprint
 import pandas as pd
 from pymongo import DESCENDING
-import datetime
+# import datetime
 from ..quant_utils import performance_metrics as pmetrics
 from ..quant_utils import date_utils
+from .strategies import get_overview
 
 
 # TODO sort date ascending
@@ -40,54 +41,10 @@ def get_strategy_backtests_series__total_value(database, strategy_ticker, start_
     return list(result)
 
 
-# TODO: import strategies db module, s.t. etl also still works (and scripts!!!!)
-STRATEGIES = [
-    # {
-    #     "ticker": "G4_EQUALLY_WEIGHTED",
-    #     "name": "Equally Weighted G4 Basket",
-    #     "description": "Equally weighted portfolio of 4 main cryptocurrencies.",
-    # },
-    # {
-    #     "ticker": "G2_EQUALLY_WEIGHTED",
-    #     "name": "Equally Weighted G2 Basket",
-    #     "description": "Equally weighted portfolio of 2 main cryptocurrencies.",
-    # },
-    # {
-    #     "ticker": "GOLD_CRYPTO_50_50",
-    #     "name": "Gold & Bitcoin 50-50 Basket",
-    #     "description": "Gold & Bitcoin Portfolio 50%-50%",
-    # },
-    {
-        "ticker": "GOLD_CRYPTO_60_40",
-        "name": "Gold & Bitcoin 60-40 Basket",
-        "description": "Gold & Bitcoin Portfolio 60%-40%",
-    },
-    {
-        "ticker": "CFBG1",
-        "name": "Coinfolio Bitcoin & Gold Balanced Index",
-        "description": "Coinfolio Bitcoin & Gold Balanced Index (Description)",
-    },
-    {
-        "ticker": "BITCOIN_ONLY",
-        "name": "Bitcoin Long Only Strategy",
-        "description": "Bitcoin Long Only Strategy Description",
-    },
-    # {
-    #     "ticker": "GOLD_CRYPTO_70_30",
-    #     "name": "Gold & Bitcoin 70-30 Basket",
-    #     "description": "Gold & Bitcoin Portfolio 70%-30%",
-    # },
-    # {
-    #     "ticker": "COINFOLIO_GOLD_CRYPTO",
-    #     "name": "Gold Crypto",
-    #     "description": "Gold & Crypto Portfolio",
-    # }
-]
-
-
 def get_strategy_backtests_series__all__total_value(database):
+    STRATEGIES_OVERVIEW = get_overview(database)
     all_total_value_series = []
-    for strategy in STRATEGIES:
+    for strategy in STRATEGIES_OVERVIEW:
         total_value_series = get_strategy_backtests_series__total_value(
             database, strategy["ticker"])
         all_total_value_series.append(total_value_series)
@@ -98,7 +55,7 @@ def get_strategy_backtests_series__all__total_value(database):
 
     for zipped_series_items in list(zipped_series):
         result_series_item = {"date": zipped_series_items[0]["date"]}
-        for (strategy_spec, series_item) in zip(STRATEGIES, zipped_series_items):
+        for (strategy_spec, series_item) in zip(STRATEGIES_OVERVIEW, zipped_series_items):
             result_series_item[strategy_spec["ticker"]
                                ] = series_item["total_value"]
             result_series.append(result_series_item)
