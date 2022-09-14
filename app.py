@@ -5,6 +5,7 @@ from flask import Flask, request
 from flask_cors import CORS
 from cryptocmd import CmcScraper
 import datetime
+# from prettyprinter import pprint
 
 
 import coinfolio_quant.datalake.cryptocurrencies as cryptocurrenciesDB
@@ -149,17 +150,19 @@ def ftx_rebalance():
 
     args = request.args
 
+    # TODO get user id from secure! JWT token and then use the JWT to retrieve api_key, api_secret and strategy_ticker for user from coinfolio js api!!
+
     # TODO we should return error if these query params are not available!
     api_key = args.get("api_key")
     api_secret = args.get("api_secret")
 
-    target_weights = [
-        {"ticker": "BTC", "weight": 0.20},
-        {"ticker": "SOL", "weight": 0.20},
-        {"ticker": "ETH", "weight": 0.20},
-        {"ticker": "XRP", "weight": 0.20},
-        {"ticker": "LTC", "weight": 0.20},
-    ]
+    # QUICK-FIX: this fixture will need to change once we have multiple strategies in the retail app
+    strategy_ticker = "CFBG1"
+
+    strategy_latest_weights = backtestsDB.get_strategy_latest_weights(
+        database, strategy_ticker)
+
+    target_weights = strategy_latest_weights["weights"]
 
     result = ftxWrapper.rebalance_portfolio(
         api_key=api_key, api_secret=api_secret, target_weights=target_weights)

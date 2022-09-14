@@ -4,8 +4,14 @@ from typing import Optional, Dict, Any, List
 from requests import Request, Session, Response, get
 import hmac
 from prettyprinter import pprint
+from ...quant_utils import asset_allocation_utils
 
 from coinfolio_quant.portfolio.rebalancing import create_target_positions, get_total_positions_value, create_liquidations, create_rebalancing_buys
+
+
+# a mapping which defines which assets on FTX should be taken as a proxy instrument
+# for any given key (e.g. "XAU" in our system would be implemented with "PAXG" on FTX exchange)
+FTX_ASSET_PROXIES = {"XAU": "PAXG"}
 
 
 class FtxClient:
@@ -73,7 +79,6 @@ class FtxClient:
     def get_open_orders(self, order_id: int, market: str = None) -> List[dict]:
         return self._get(f'orders', {'market': market, 'order_id': order_id})
 
-
     def execute_liquidation(self, ticker: str, size: float, into: str = 'USD', client_id: str = None):
         # e.g. BTC/USD
         market = ticker + "/" + into
@@ -117,6 +122,10 @@ class FtxClient:
                                  price=None, size=buy_quantity, type="market")
 
     def trigger_rebalance(self, target_weights):
+
+        # 0. replace tickers with the proxy-tickers for FTX
+        target_weights = asset_allocation_utils.insert_assets_proxies(
+            target_weights, FTX_ASSET_PROXIES)
 
         # 1. get current positions and total portfolio value
         positions = self.get_positions()
