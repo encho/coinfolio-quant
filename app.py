@@ -216,5 +216,30 @@ def ftx_get_portfolio_value_series():
     return json.dumps(portfolio_value_series, default=default)
 
 
+
+
+@app.route("/analytics-tools/correlation-visualizer")
+def analytics_tools_correlation_visualizer():
+
+    args = request.args
+
+    # TODO we should return error if these query params are not available!
+    firstAsset = args.get("firstAsset")
+    secondAsset = args.get("secondAsset")
+    timePeriod = args.get("timePeriod")
+
+    # portfolio_value_series = clientPortfoliosDB.get_portfolio_value_series(
+    #     database=database, client_id=user_id)
+
+    result = {
+        "aaa": firstAsset,
+        "bbb": secondAsset,
+        "ccc": timePeriod,
+    }
+
+    return json.dumps(result, default=default)
+
+
+
 if __name__ == '__main__':
     app.run()
