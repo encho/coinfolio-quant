@@ -30,15 +30,9 @@ def get_correlation_visualizer_data(database, first_asset, second_asset, start_d
     df[second_asset_change] = df[second_asset_index].pct_change()
 
     correlation = df[first_asset_change].corr(df[second_asset_change])
-
     series_df = df[[first_asset_index, second_asset_index]]
 
     return {
-        "first_asset": first_asset,
-        "second_asset": second_asset,
-        # "time_period": time_period,
         "correlation": correlation,
-        # "series": series_df.to_json(orient="records"),
-        # "series": series_df.head().to_json(orient="table"),
-        "data": series_df,
+        "series_df": series_df,
     }
