@@ -19,17 +19,11 @@ client = MongoClient(MONGO_CONNECTION_STRING)
 database = client["coinfolio_prod"]
 
 
-
 def analytics_correlation_tool_endpoint(first_asset, second_asset, date_shift_enum):
 
     def timeseries_df_to_json(df):
         df["date"] = df.index
         return df.to_json(orient="records")
-
-    # this is the api endpoint function....
-    # first_asset = "BTC"
-    # second_asset = "XAU"
-    # date_shift_enum = "3M"
 
     today = datetime.datetime(2022, 9, 16)
     start_date = date_utils.get_shifted_date(today, date_shift_enum)
@@ -37,12 +31,12 @@ def analytics_correlation_tool_endpoint(first_asset, second_asset, date_shift_en
     data = analytics_tools.get_correlation_visualizer_data(
         database, first_asset, second_asset, start_date=start_date, end_date=today)
 
-    # now, transform to json, to return from api...
     result = {
         "first_asset": first_asset,
         "second_asset": second_asset,
         "correlation": data["correlation"],
         "series": timeseries_df_to_json(data["series_df"])
+        # "series": data["series_df"]
     }
 
     return result

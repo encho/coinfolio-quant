@@ -5,14 +5,17 @@ from flask import Flask, request
 from flask_cors import CORS
 from cryptocmd import CmcScraper
 import datetime
+import time
 # from prettyprinter import pprint
 
 
 import coinfolio_quant.datalake.cryptocurrencies as cryptocurrenciesDB
 import coinfolio_quant.datalake.strategies as strategiesDB
 import coinfolio_quant.datalake.backtest as backtestsDB
+import coinfolio_quant.datalake.analytics_tools as analyticsToolsDB
 import coinfolio_quant.datalake.client_portfolios as clientPortfoliosDB
 import coinfolio_quant.exchanges.ftx.ftx as ftxWrapper
+import coinfolio_quant.quant_utils.date_utils as date_utils
 
 
 MONGO_CONNECTION_STRING = os.environ["MONGO_CONNECTION_STRING"]
@@ -216,29 +219,40 @@ def ftx_get_portfolio_value_series():
     return json.dumps(portfolio_value_series, default=default)
 
 
-
-
 @app.route("/analytics-tools/correlation-visualizer")
 def analytics_tools_correlation_visualizer():
 
     args = request.args
 
     # TODO we should return error if these query params are not available!
-    firstAsset = args.get("firstAsset")
-    secondAsset = args.get("secondAsset")
-    timePeriod = args.get("timePeriod")
+    first_asset = args.get("firstAsset")
+    second_asset = args.get("secondAsset")
+    end_date_iso_string = args.get("endDate")
+    time_period_shift = args.get("timePeriod")
 
-    # portfolio_value_series = clientPortfoliosDB.get_portfolio_value_series(
-    #     database=database, client_id=user_id)
+    def timeseries_df_to_json(df):
+        df["date"] = df.index
+        return df.to_json(orient="records")
+
+    end_date = datetime.datetime(
+        *time.strptime(end_date_iso_string, "%Y-%m-%dT%H:%M:%S.%f%z")[:6])
+    start_date = date_utils.get_shifted_date(end_date, time_period_shift)
+
+    data = analyticsToolsDB.get_correlation_visualizer_data(
+        database, first_asset, second_asset, start_date=start_date, end_date=end_date)
 
     result = {
-        "aaa": firstAsset,
-        "bbb": secondAsset,
-        "ccc": timePeriod,
+        "first_asset": first_asset,
+        "second_asset": second_asset,
+        "start_date": start_date,
+        "end_date": end_date,
+        "correlation": data["correlation"],
+        "series": timeseries_df_to_json(data["series_df"])
     }
 
-    return json.dumps(result, default=default)
+    print(result)
 
+    return json.dumps(result, default=default)
 
 
 if __name__ == '__main__':

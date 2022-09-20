@@ -7,9 +7,8 @@ from .cryptocurrencies import get_field_dataframe
 
 def get_correlation_visualizer_data(database, first_asset, second_asset, start_date, end_date):
 
-    # TODO the 'numeraire' (here USD), should also come from the GUI
-    first_asset_ticker = first_asset + "-USD"
-    second_asset_ticker = second_asset + "-USD"
+    first_asset_ticker = first_asset
+    second_asset_ticker = second_asset
 
     first_asset_index = first_asset_ticker + "_INDEX"
     second_asset_index = second_asset_ticker + "_INDEX"
@@ -30,9 +29,12 @@ def get_correlation_visualizer_data(database, first_asset, second_asset, start_d
     df[second_asset_change] = df[second_asset_index].pct_change()
 
     correlation = df[first_asset_change].corr(df[second_asset_change])
-    series_df = df[[first_asset_index, second_asset_index]]
+
+    data = [df[first_asset_index], df[second_asset_index]]
+    headers = ["firstAsset", "secondAsset"]
+    new_df = pd.concat(data, axis=1, keys=headers)
 
     return {
         "correlation": correlation,
-        "series_df": series_df,
+        "series_df": new_df,
     }
