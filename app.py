@@ -246,6 +246,7 @@ def analytics_tools_correlation_visualizer():
         "second_asset": second_asset,
         "start_date": start_date,
         "end_date": end_date,
+        "time_period": time_period_shift,
         "correlation": data["correlation"],
         "series": timeseries_df_to_json(data["series_df"])
     }
