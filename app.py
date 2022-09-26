@@ -103,6 +103,14 @@ def get_strategy_backtests_series__all__total_value():
     return result
 
 
+@app.route('/timeseriesdata')
+def cryptocurrencies_list():
+    timeseriesdata_list = cryptocurrenciesDB.get_timeseriesdata_list(
+        database)
+    return json.dumps(timeseriesdata_list, default=default)
+
+
+# TODO: rename to cryptocurrencies/dates-overview or so
 @app.route('/cryptocurrencies')
 def cryptocurrencies():
     cryptocurrencies_overview = cryptocurrenciesDB.get_overview(database)
