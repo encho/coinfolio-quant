@@ -33,7 +33,7 @@ MONGO_CONNECTION_STRING = os.environ["MONGO_CONNECTION_STRING"]
 # TODO have this as datetime object, yahoo fetching function needs to transform this into string eventually
 # long backtest
 START_DATE = "2014-09-17"  # not there for eth
-END_DATE = "2022-08-16"
+END_DATE = "2022-09-07"
 
 # short backtest
 # START_DATE = "2020-01-02"

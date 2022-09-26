@@ -5,13 +5,17 @@ from flask import Flask, request
 from flask_cors import CORS
 from cryptocmd import CmcScraper
 import datetime
+import time
+# from prettyprinter import pprint
 
 
 import coinfolio_quant.datalake.cryptocurrencies as cryptocurrenciesDB
 import coinfolio_quant.datalake.strategies as strategiesDB
 import coinfolio_quant.datalake.backtest as backtestsDB
+import coinfolio_quant.datalake.analytics_tools as analyticsToolsDB
 import coinfolio_quant.datalake.client_portfolios as clientPortfoliosDB
 import coinfolio_quant.exchanges.ftx.ftx as ftxWrapper
+import coinfolio_quant.quant_utils.date_utils as date_utils
 
 
 MONGO_CONNECTION_STRING = os.environ["MONGO_CONNECTION_STRING"]
@@ -99,6 +103,14 @@ def get_strategy_backtests_series__all__total_value():
     return result
 
 
+@app.route('/timeseriesdata')
+def cryptocurrencies_list():
+    timeseriesdata_list = cryptocurrenciesDB.get_timeseriesdata_list(
+        database)
+    return json.dumps(timeseriesdata_list, default=default)
+
+
+# TODO: rename to cryptocurrencies/dates-overview or so
 @app.route('/cryptocurrencies')
 def cryptocurrencies():
     cryptocurrencies_overview = cryptocurrenciesDB.get_overview(database)
@@ -149,17 +161,19 @@ def ftx_rebalance():
 
     args = request.args
 
+    # TODO get user id from secure! JWT token and then use the JWT to retrieve api_key, api_secret and strategy_ticker for user from coinfolio js api!!
+
     # TODO we should return error if these query params are not available!
     api_key = args.get("api_key")
     api_secret = args.get("api_secret")
 
-    target_weights = [
-        {"ticker": "BTC", "weight": 0.20},
-        {"ticker": "SOL", "weight": 0.20},
-        {"ticker": "ETH", "weight": 0.20},
-        {"ticker": "XRP", "weight": 0.20},
-        {"ticker": "LTC", "weight": 0.20},
-    ]
+    # QUICK-FIX: this fixture will need to change once we have multiple strategies in the retail app
+    strategy_ticker = "CFBG1"
+
+    strategy_latest_weights = backtestsDB.get_strategy_latest_weights(
+        database, strategy_ticker)
+
+    target_weights = strategy_latest_weights["weights"]
 
     result = ftxWrapper.rebalance_portfolio(
         api_key=api_key, api_secret=api_secret, target_weights=target_weights)
@@ -211,6 +225,43 @@ def ftx_get_portfolio_value_series():
         database=database, client_id=user_id)
 
     return json.dumps(portfolio_value_series, default=default)
+
+
+@app.route("/analytics-tools/correlation-visualizer")
+def analytics_tools_correlation_visualizer():
+
+    args = request.args
+
+    # TODO we should return error if these query params are not available!
+    first_asset = args.get("firstAsset")
+    second_asset = args.get("secondAsset")
+    end_date_iso_string = args.get("endDate")
+    time_period_shift = args.get("timePeriod")
+
+    def timeseries_df_to_json(df):
+        df["date"] = df.index
+        return df.to_json(orient="records")
+
+    end_date = datetime.datetime(
+        *time.strptime(end_date_iso_string, "%Y-%m-%dT%H:%M:%S.%f%z")[:6])
+    start_date = date_utils.get_shifted_date(end_date, time_period_shift)
+
+    data = analyticsToolsDB.get_correlation_visualizer_data(
+        database, first_asset, second_asset, start_date=start_date, end_date=end_date)
+
+    result = {
+        "first_asset": first_asset,
+        "second_asset": second_asset,
+        "start_date": start_date,
+        "end_date": end_date,
+        "time_period": time_period_shift,
+        "correlation": data["correlation"],
+        "series": timeseries_df_to_json(data["series_df"])
+    }
+
+    print(result)
+
+    return json.dumps(result, default=default)
 
 
 if __name__ == '__main__':
