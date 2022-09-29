@@ -105,7 +105,7 @@ def get_strategy_backtests_series__all__total_value():
 
 @app.route('/timeseriesdata')
 def cryptocurrencies_list():
-    timeseriesdata_list = cryptocurrenciesDB.get_timeseriesdata_list(
+    timeseriesdata_list = cryptocurrenciesDB.get_timeseries_metadata_list(
         database)
     return json.dumps(timeseriesdata_list, default=default)
 
@@ -249,6 +249,11 @@ def analytics_tools_correlation_visualizer():
     data = analyticsToolsDB.get_correlation_visualizer_data(
         database, first_asset, second_asset, start_date=start_date, end_date=end_date)
 
+    first_asset_metadata = cryptocurrenciesDB.get_timeseries_metadata(
+        database, first_asset)
+    second_asset_metadata = cryptocurrenciesDB.get_timeseries_metadata(
+        database, second_asset)
+
     result = {
         "first_asset": first_asset,
         "second_asset": second_asset,
@@ -256,10 +261,10 @@ def analytics_tools_correlation_visualizer():
         "end_date": end_date,
         "time_period": time_period_shift,
         "correlation": data["correlation"],
-        "series": timeseries_df_to_json(data["series_df"])
+        "series": timeseries_df_to_json(data["series_df"]),
+        "first_asset_metadata": first_asset_metadata,
+        "second_asset_metadata": second_asset_metadata,
     }
-
-    print(result)
 
     return json.dumps(result, default=default)
 
