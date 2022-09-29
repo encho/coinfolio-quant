@@ -21,7 +21,7 @@ MARKET_DATA_METADATA = [
         "quote": "GBP", "yahoo_ticker": "^FTSE", "name": "FTSE Index", "type": "FX"},
     {"ticker": "DAX_INDEX", "base": "DAX", "quote": "EUR",
         "yahoo_ticker": "^GDAXI", "name": "DAX Index", "type": "FX"},
-    {"ticker": "S&P_INDEX", "base": "S&P", "quote": "USD",
+    {"ticker": "SPX_INDEX", "base": "S&P", "quote": "USD",
         "yahoo_ticker": "^GSPC", "name": "S&P Index", "type": "FX"},
     {"ticker": "NIKKEI_INDEX", "base": "NIKKEI225",
         "quote": "USD", "yahoo_ticker": "^N225", "name": "Nikkei Index", "type": "FX"},
