@@ -34,6 +34,7 @@ def get_correlation_visualizer_data(database, first_asset, second_asset, start_d
     headers = ["firstAsset", "secondAsset"]
     new_df = pd.concat(data, axis=1, keys=headers)
 
+
     return {
         "correlation": correlation,
         "series_df": new_df,

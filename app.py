@@ -8,7 +8,6 @@ import datetime
 import time
 # from prettyprinter import pprint
 
-
 import coinfolio_quant.datalake.cryptocurrencies as cryptocurrenciesDB
 import coinfolio_quant.datalake.strategies as strategiesDB
 import coinfolio_quant.datalake.backtest as backtestsDB
@@ -16,6 +15,7 @@ import coinfolio_quant.datalake.analytics_tools as analyticsToolsDB
 import coinfolio_quant.datalake.client_portfolios as clientPortfoliosDB
 import coinfolio_quant.exchanges.ftx.ftx as ftxWrapper
 import coinfolio_quant.quant_utils.date_utils as date_utils
+import coinfolio_quant.quant_utils.series_warnings as series_warnings
 
 
 MONGO_CONNECTION_STRING = os.environ["MONGO_CONNECTION_STRING"]
@@ -254,6 +254,8 @@ def analytics_tools_correlation_visualizer():
     second_asset_metadata = cryptocurrenciesDB.get_timeseries_metadata(
         database, second_asset)
 
+    warnings = series_warnings.get_series_warnings(data["series_df"])
+
     result = {
         "first_asset": first_asset,
         "second_asset": second_asset,
@@ -264,6 +266,7 @@ def analytics_tools_correlation_visualizer():
         "series": timeseries_df_to_json(data["series_df"]),
         "first_asset_metadata": first_asset_metadata,
         "second_asset_metadata": second_asset_metadata,
+        "warnings": warnings
     }
 
     return json.dumps(result, default=default)
