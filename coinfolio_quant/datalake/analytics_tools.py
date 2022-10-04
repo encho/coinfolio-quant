@@ -19,9 +19,6 @@ def get_correlation_visualizer_data(database, first_asset, second_asset, start_d
     df = get_field_dataframe(
         database, [first_asset_ticker, second_asset_ticker], start_date=start_date, end_date=end_date, field="close")
 
-    # print("the dataframe is::::")
-    # print(df.tail(20))
-
     df[first_asset_index] = 100 * df[first_asset_ticker] / \
         df[first_asset_ticker].iloc[0]
 
@@ -37,15 +34,6 @@ def get_correlation_visualizer_data(database, first_asset, second_asset, start_d
     headers = ["firstAsset", "secondAsset"]
     new_df = pd.concat(data, axis=1, keys=headers)
 
-    # print("the new dataframe is::::")
-    # print(new_df.tail(20))
-
-    # last = df['XAU-USD'].iloc[-1]
-    # forelast = df['XAU-USD'].iloc[-2]
-    # foreforelast = df['XAU-USD'].iloc[-3]
-    # print(last)
-    # print(forelast)
-    # print(foreforelast)
 
     return {
         "correlation": correlation,
