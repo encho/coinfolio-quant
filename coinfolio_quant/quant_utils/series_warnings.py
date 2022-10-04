@@ -54,7 +54,7 @@ def get_series_warnings(dataframe):
         print(k)
         is_ok = has_up_to_date_data(dataframe[k])
         if not is_ok:
-            warnings[k] = "Data not up to date"
+            warnings[k] = "Data not up to date."
 
     if not bool(warnings):
         return None
@@ -62,5 +62,5 @@ def get_series_warnings(dataframe):
     return warnings
 
 
-assert(get_series_warnings(df) == {"gold": "Data not up to date"})
+assert(get_series_warnings(df) == {"gold": "Data not up to date."})
 assert(get_series_warnings(df_up_to_date) == None)
