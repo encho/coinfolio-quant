@@ -8,6 +8,7 @@ import datetime
 import time
 # from prettyprinter import pprint
 
+import coinfolio_quant.datalake.market_data as marketDataDB
 import coinfolio_quant.datalake.cryptocurrencies as cryptocurrenciesDB
 import coinfolio_quant.datalake.strategies as strategiesDB
 import coinfolio_quant.datalake.backtest as backtestsDB
@@ -105,7 +106,7 @@ def get_strategy_backtests_series__all__total_value():
 
 @app.route('/timeseriesdata')
 def cryptocurrencies_list():
-    timeseriesdata_list = cryptocurrenciesDB.get_timeseries_metadata_list(
+    timeseriesdata_list = marketDataDB.get_timeseries_metadata_list(
         database)
     return json.dumps(timeseriesdata_list, default=default)
 
@@ -249,9 +250,9 @@ def analytics_tools_correlation_visualizer():
     data = analyticsToolsDB.get_correlation_visualizer_data(
         database, first_asset, second_asset, start_date=start_date, end_date=end_date)
 
-    first_asset_metadata = cryptocurrenciesDB.get_timeseries_metadata(
+    first_asset_metadata = marketDataDB.get_timeseries_metadata(
         database, first_asset)
-    second_asset_metadata = cryptocurrenciesDB.get_timeseries_metadata(
+    second_asset_metadata = marketDataDB.get_timeseries_metadata(
         database, second_asset)
 
     warnings = series_warnings.get_series_warnings(data["series_df"])
