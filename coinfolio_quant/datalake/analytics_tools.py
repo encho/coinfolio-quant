@@ -9,6 +9,8 @@ def series_correlation(series_1, series_2):
         This is useful to compute correlations between cryptocurrencies, which have 7 days of prices/week and traditional
         assets, which may just have up to 5 active days/week.
     """
+    if (series_1.name == series_2.name):
+        series_2 = series_1.copy()
     series_1.name = "prices_1"
     series_2.name = "prices_2"
     df = pd.concat([series_1, series_2], axis=1)
@@ -33,6 +35,7 @@ def series_correlation(series_1, series_2):
         df["prices_1"].apply(nan_or_1)
     df["prices_2_pct_change__AUXILIARY"] = df["prices_2_masked"].pct_change() * \
         df["prices_2"].apply(nan_or_1)
+
     correlation = df["prices_1_pct_change__AUXILIARY"].corr(
         df["prices_2_pct_change__AUXILIARY"])
 

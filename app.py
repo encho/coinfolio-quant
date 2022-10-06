@@ -1,4 +1,5 @@
 import os
+# TODO deprecate json in favor of simplejson (used below)
 import json
 from pymongo import MongoClient
 from flask import Flask, request
@@ -6,7 +7,7 @@ from flask_cors import CORS
 from cryptocmd import CmcScraper
 import datetime
 import time
-# from prettyprinter import pprint
+import simplejson
 
 import coinfolio_quant.datalake.market_data as marketDataDB
 import coinfolio_quant.datalake.cryptocurrencies as cryptocurrenciesDB
@@ -270,7 +271,12 @@ def analytics_tools_correlation_visualizer():
         "warnings": warnings
     }
 
-    return json.dumps(result, default=default)
+    json_result = simplejson.dumps(result, ignore_nan=True,
+                                   default=datetime.datetime.isoformat)
+
+    print(json_result)
+
+    return json_result
 
 
 if __name__ == '__main__':
