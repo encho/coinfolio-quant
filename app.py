@@ -1,4 +1,5 @@
 import os
+# TODO deprecate json in favor of simplejson (used below)
 import json
 from pymongo import MongoClient
 from flask import Flask, request
@@ -6,9 +7,9 @@ from flask_cors import CORS
 from cryptocmd import CmcScraper
 import datetime
 import time
-# from prettyprinter import pprint
+import simplejson
 
-
+import coinfolio_quant.datalake.market_data as marketDataDB
 import coinfolio_quant.datalake.cryptocurrencies as cryptocurrenciesDB
 import coinfolio_quant.datalake.strategies as strategiesDB
 import coinfolio_quant.datalake.backtest as backtestsDB
@@ -16,6 +17,7 @@ import coinfolio_quant.datalake.analytics_tools as analyticsToolsDB
 import coinfolio_quant.datalake.client_portfolios as clientPortfoliosDB
 import coinfolio_quant.exchanges.ftx.ftx as ftxWrapper
 import coinfolio_quant.quant_utils.date_utils as date_utils
+import coinfolio_quant.quant_utils.series_warnings as series_warnings
 
 
 MONGO_CONNECTION_STRING = os.environ["MONGO_CONNECTION_STRING"]
@@ -105,7 +107,7 @@ def get_strategy_backtests_series__all__total_value():
 
 @app.route('/timeseriesdata')
 def cryptocurrencies_list():
-    timeseriesdata_list = cryptocurrenciesDB.get_timeseriesdata_list(
+    timeseriesdata_list = marketDataDB.get_timeseries_metadata_list(
         database)
     return json.dumps(timeseriesdata_list, default=default)
 
@@ -249,6 +251,13 @@ def analytics_tools_correlation_visualizer():
     data = analyticsToolsDB.get_correlation_visualizer_data(
         database, first_asset, second_asset, start_date=start_date, end_date=end_date)
 
+    first_asset_metadata = marketDataDB.get_timeseries_metadata(
+        database, first_asset)
+    second_asset_metadata = marketDataDB.get_timeseries_metadata(
+        database, second_asset)
+
+    warnings = series_warnings.get_series_warnings(data["series_df"])
+
     result = {
         "first_asset": first_asset,
         "second_asset": second_asset,
@@ -256,12 +265,16 @@ def analytics_tools_correlation_visualizer():
         "end_date": end_date,
         "time_period": time_period_shift,
         "correlation": data["correlation"],
-        "series": timeseries_df_to_json(data["series_df"])
+        "series": timeseries_df_to_json(data["series_df"]),
+        "first_asset_metadata": first_asset_metadata,
+        "second_asset_metadata": second_asset_metadata,
+        "warnings": warnings
     }
 
-    print(result)
+    json_result = simplejson.dumps(result, ignore_nan=True,
+                                   default=datetime.datetime.isoformat)
 
-    return json.dumps(result, default=default)
+    return json_result
 
 
 if __name__ == '__main__':

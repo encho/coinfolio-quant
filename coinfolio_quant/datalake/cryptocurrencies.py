@@ -24,12 +24,6 @@ def get_overview(database):
     return overview_table
 
 
-def get_timeseriesdata_list(database):
-    market_data_metatdata_collection = database["market_data_metadata"]
-    cursor = market_data_metatdata_collection.find({}, {"_id": False})
-    results_list = list(cursor)
-    return results_list
-
 
 def get_cryptocurrency_dataframe(database, ticker):
     cryptocurrency_quotes_collection = database["cryptocurrency_quotes"]
