@@ -274,8 +274,6 @@ def analytics_tools_correlation_visualizer():
     json_result = simplejson.dumps(result, ignore_nan=True,
                                    default=datetime.datetime.isoformat)
 
-    print(json_result)
-
     return json_result
 
 
