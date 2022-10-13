@@ -7,7 +7,6 @@ import datetime
 from etl_config import MARKET_DATA_METADATA
 import db_market_data
 
-
 MONGO_CONNECTION_STRING = os.environ["MONGO_CONNECTION_STRING"]
 
 CLIENT = MongoClient(MONGO_CONNECTION_STRING)
@@ -16,8 +15,8 @@ DATABASE = CLIENT["coinfolio_prod"]
 # START_DATE = datetime.date(2014, 9, 17)
 # END_DATE = datetime.date.today() - datetime.timedelta(days=1)
 
-START_DATE = datetime.date(2021, 9, 1)
-END_DATE = datetime.date(2022, 9, 1)
+START_DATE = datetime.date.today() - datetime.timedelta(days=20)
+END_DATE = datetime.date.today() - datetime.timedelta(days=1)
 
 # --------------------------------------------------------------------
 # STORE MARKET DATA METADATA INFO

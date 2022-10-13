@@ -1,30 +1,61 @@
 import pandas as pd
 
-# TODO integrate
-# def get_overview(database):
-#     cryptocurrency_quotes_collection = database["cryptocurrency_quotes"]
-#     print(cryptocurrency_quotes_collection)
+# TODO eventually into utils
+# TODO more performant, return as soon as first is found
 
-#     result = database.cryptocurrency_quotes.aggregate(
-#         [
-#             {
-#                 "$group":
-#                 {
-#                     "_id": "$ticker",
-#                     "min_date": {"$min": "$date"},
-#                     "max_date": {"$max": "$date"},
-#                 }
-#             }
-#         ]
-#     )
 
-#     overview_table = [{"ticker": it["_id"], "min_date": it["min_date"],
-#                        "max_date": it["max_date"]} for it in result]
+def find_unique(predicate, data):
+    filtered_items = list(filter(predicate, data))
 
-#     return overview_table
+    if len(filtered_items) != 1:
+        raise Exception(
+            "Could not find exaclty one match for the predicate.")
+
+    return filtered_items[0]
+
+
+def get_overview_list(database):
+    market_data_series_collection = database["market_data_series"]
+
+    result = market_data_series_collection.aggregate(
+        [
+            {
+                "$group":
+                {
+                    "_id": "$ticker",
+                    "min_date": {"$min": "$date"},
+                    "max_date": {"$max": "$date"},
+                }
+            }
+        ]
+    )
+
+    dates_info_list = [{"ticker": it["_id"], "min_date": it["min_date"],
+                       "max_date": it["max_date"]} for it in result]
+
+    metadata_list = get_metadata_list(database)
+
+    overview_list = []
+    for metadata_item in metadata_list:
+        dates_info = find_unique(
+            lambda it: it["ticker"] == metadata_item["ticker"], dates_info_list)
+        merged_item = dict()
+        merged_item.update(metadata_item)
+        merged_item.update(dates_info)
+        overview_list.append(merged_item)
+
+    return overview_list
+
+
+def get_metadata_list(database):
+    market_data_metatdata_collection = database["market_data_metadata"]
+    cursor = market_data_metatdata_collection.find({}, {"_id": False})
+    results_list = list(cursor)
+    return results_list
 
 
 # TODO remove from cryptocurrencies module
+# TODO deprecate
 def get_timeseries_metadata_list(database):
     market_data_metatdata_collection = database["market_data_metadata"]
     cursor = market_data_metatdata_collection.find({}, {"_id": False})
@@ -33,6 +64,7 @@ def get_timeseries_metadata_list(database):
 
 
 # TODO remove from cryptocurrencies module
+# TODO rename to get_metadata
 def get_timeseries_metadata(database, ticker):
     market_data_metatdata_collection = database["market_data_metadata"]
     cursor = market_data_metatdata_collection.find(
@@ -40,14 +72,14 @@ def get_timeseries_metadata(database, ticker):
     results_list = list(cursor)
     return results_list[0]
 
-# TODO integrate
-# def get_cryptocurrency_dataframe(database, ticker):
-#     cryptocurrency_quotes_collection = database["cryptocurrency_quotes"]
-#     cursor = cryptocurrency_quotes_collection.find(
-#         {"ticker": ticker}, {"_id": False})
-#     results_list = list(cursor)
-#     df = pd.DataFrame(results_list)
-#     return df
+
+def get_dataframe(database, ticker):
+    market_data_series_collection = database["market_data_series"]
+    cursor = market_data_series_collection.find(
+        {"ticker": ticker}, {"_id": False})
+    results_list = list(cursor)
+    df = pd.DataFrame(results_list)
+    return df
 
 
 # TODO sort date ascending

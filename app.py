@@ -112,13 +112,40 @@ def cryptocurrencies_list():
     return json.dumps(timeseriesdata_list, default=default)
 
 
-# TODO: rename to cryptocurrencies/dates-overview or so
+@app.route('/market-data/metadata')
+def get_market_data_metadata_list():
+    metadata_list = marketDataDB.get_metadata_list(
+        database)
+    return json.dumps(metadata_list, default=default)
+
+
+@app.route('/market-data/overview')
+def get_market_data_overview_list():
+    overview_list = marketDataDB.get_overview_list(
+        database)
+    return json.dumps(overview_list, default=default)
+
+# TODO add date range to query params
+
+
+@app.route('/market-data/dataframe/<ticker>')
+def get_market_data_dataframe(ticker):
+    df = marketDataDB.get_dataframe(
+        database, ticker=ticker)
+
+    result = df.to_json(orient="table")
+
+    return result
+
+
+# TODO: deprecate
 @app.route('/cryptocurrencies')
 def cryptocurrencies():
     cryptocurrencies_overview = cryptocurrenciesDB.get_overview(database)
     return json.dumps(cryptocurrencies_overview, default=default)
 
 
+# TODO: deprecate
 @app.route('/cryptocurrencies/<ticker>')
 def cryptocurrency_series(ticker):
     cryptocurrency_df = cryptocurrenciesDB.get_cryptocurrency_dataframe(
