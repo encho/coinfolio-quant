@@ -1,3 +1,8 @@
+import datetime
+
+START_DATE = datetime.date(2014, 9, 17)
+END_DATE = datetime.date.today() - datetime.timedelta(days=1)
+
 
 # TODO differentiate between exchange rates/ prices/ indices....?
 MARKET_DATA_METADATA = [
