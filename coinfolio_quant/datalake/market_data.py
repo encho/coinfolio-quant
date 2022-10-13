@@ -55,18 +55,7 @@ def get_metadata_list(database):
     return results_list
 
 
-# TODO remove from cryptocurrencies module
-# TODO deprecate
-def get_timeseries_metadata_list(database):
-    market_data_metatdata_collection = database["market_data_metadata"]
-    cursor = market_data_metatdata_collection.find({}, {"_id": False})
-    results_list = list(cursor)
-    return results_list
-
-
-# TODO remove from cryptocurrencies module
-# TODO rename to get_metadata
-def get_timeseries_metadata(database, ticker):
+def get_metadata(database, ticker):
     market_data_metatdata_collection = database["market_data_metadata"]
     cursor = market_data_metatdata_collection.find(
         {"ticker": ticker}, {"_id": False})
