@@ -3,7 +3,6 @@ import datetime
 from pymongo import MongoClient
 import datetime
 
-# from etl_config import MARKET_DATA_METADATA, START_DATE, END_DATE
 from etl_config import MARKET_DATA_METADATA
 import etl_db_market_data
 
