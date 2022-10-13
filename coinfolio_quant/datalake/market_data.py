@@ -25,13 +25,14 @@ def get_overview_list(database):
                     "_id": "$ticker",
                     "min_date": {"$min": "$date"},
                     "max_date": {"$max": "$date"},
+                    "count": {"$sum": 1}
                 }
             }
         ]
     )
 
     dates_info_list = [{"ticker": it["_id"], "min_date": it["min_date"],
-                       "max_date": it["max_date"]} for it in result]
+                       "max_date": it["max_date"], "count": it["count"]} for it in result]
 
     metadata_list = get_metadata_list(database)
 

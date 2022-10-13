@@ -26,9 +26,10 @@ def insert_metadata_list(database, metadata_list):
 
 
 # TODO actually metadata should be taken from database
-def load_all_series(database, metadata_list, start_date, end_date):
+def load_all_series(database, metadata_list, start_date, end_date, upsert=False):
     for metadata_record in metadata_list:
-        fetch_and_store_series(database, metadata_record, start_date, end_date)
+        fetch_and_store_series(database, metadata_record,
+                               start_date, end_date, upsert=upsert)
 
 
 def drop_all_series_data_for_date_range(database, start_date, end_date):
@@ -47,7 +48,7 @@ def drop_all_series_data_for_date_range(database, start_date, end_date):
     print(f'{result.deleted_count} series items deleted')
 
 
-def fetch_and_store_series(database, market_data_spec, start_date, end_date):
+def fetch_and_store_series(database, market_data_spec, start_date, end_date, upsert=False):
 
     market_data_series_collection = series_collection(database)
 
@@ -100,7 +101,13 @@ def fetch_and_store_series(database, market_data_spec, start_date, end_date):
             "percentage_change": row.percentage_change,
             "adjusted_percentage_change": row.adjusted_percentage_change,
         }
-        market_data_series_collection.insert_one(record)
+
+        if upsert == False:
+            market_data_series_collection.insert_one(record)
+        else:
+            market_data_series_collection.update_one({"ticker": ticker, "date": index},
+                                                     {"$set": record}, upsert=True
+                                                     )
 
         current_row = current_row + 1
         bar.update(current_row)
