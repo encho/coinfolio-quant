@@ -56,7 +56,13 @@ def get_strategy(ticker):
 def get_strategy_weights_series(ticker):
     strategy_weights_series = strategiesDB.get_strategy_weights_series(
         database, ticker)
-    return json.dumps(strategy_weights_series, default=default)
+
+    json_result = simplejson.dumps(strategy_weights_series, ignore_nan=True,
+                                   default=datetime.datetime.isoformat)
+
+    # return json.dumps(strategy_weights_series, default=default)
+    print(json_result)
+    return json_result
 
 
 @app.route('/strategies/series/backtests/<ticker>')

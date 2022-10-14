@@ -38,7 +38,7 @@ def get_strategy_weights_series(database, ticker, start_date=None, end_date=None
 
         query_object["date"] = date_query
 
-    result = database.strategies_weights.find(query_object)
+    result = database.strategies_weights.find(query_object, {"_id":False})
     return list(result)
 
 
