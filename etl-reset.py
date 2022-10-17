@@ -44,20 +44,6 @@ etl_db_strategy_weights.insert_metadata_list(DATABASE, STRATEGIES_SPECS)
 # --------------------------------------------------------------------
 print("loading strategy weights data")
 etl_db_strategy_weights.drop_weights_series_collection(DATABASE)
-
-
-# def load_all_weights_series(DB, SPECS, START, END):
-#     dates_list_for_period = get_dates_for_period(START, END)
-#     for strategy in SPECS:
-#         print("creating strategy weights for strategy: " + strategy["ticker"])
-#         for date in dates_list_for_period:
-#             etl_db_strategy_weights.create_strategy_weights(DB,
-#                                                             strategy["ticker"], date)
-
-
-# TODO implement
-# etl_db_strategy_weights.load_all_weights_series(
-#     DATABASE, STRATEGIES_SPECS, RESET_START_DATE, RESET_END_DATE)
 etl_db_strategy_weights.load_all_weights_series(
     DATABASE, STRATEGIES_SPECS, RESET_START_DATE, RESET_END_DATE)
 
