@@ -1,7 +1,6 @@
 # import etl_utils_strategy_weights_allocation as assetAllocation
 # import etl_utils_strategy_weights_universe as universe
 import datetime
-from etl_config import STRATEGIES_SPECS
 
 
 # ---------------------------------------------------------------------
@@ -41,14 +40,14 @@ def drop_weights_series_collection(database):
 
 def insert_metadata_list(database, strategies_metadata):
     collection = metadata_collection(database)
-    for strategy in STRATEGIES_SPECS:
+    for strategy in strategies_metadata:
         cleaned_strategy = strategy.copy()
         cleaned_strategy.pop("get_universe")
         cleaned_strategy.pop("get_weights")
         collection.insert_one(cleaned_strategy)
 
 
-def create_strategy_weights(database, strategy_ticker, date, upsert=False):
+def create_strategy_weights(database, strategy_ticker, strategies_specs, date, upsert=False):
     # TODO make date_to_datetime function
     dt = datetime.datetime.combine(date, datetime.datetime.min.time())
 
@@ -56,7 +55,7 @@ def create_strategy_weights(database, strategy_ticker, date, upsert=False):
 
     strategy_specs = list(filter(
         lambda it: it["ticker"] == strategy_ticker,
-        STRATEGIES_SPECS
+        strategies_specs
     ))
     if len(strategy_specs) != 1:
         raise Exception(
@@ -90,4 +89,4 @@ def load_all_weights_series(DB, SPECS, START, END, upsert=False):
         print("creating strategy weights for strategy: " + strategy["ticker"])
         for date in dates_list_for_period:
             create_strategy_weights(DB,
-                                    strategy["ticker"], date, upsert=upsert)
+                                    strategy["ticker"], SPECS, date, upsert=upsert)

@@ -2,7 +2,8 @@ import datetime
 import etl_utils_strategy_weights_allocation as assetAllocation
 import etl_utils_strategy_weights_universe as universe
 
-RESET_START_DATE = datetime.date.today() - datetime.timedelta(days=30)
+# RESET_START_DATE = datetime.date.today() - datetime.timedelta(days=30)
+RESET_START_DATE = datetime.date.today() - datetime.timedelta(days=20)
 RESET_END_DATE = datetime.date.today() - datetime.timedelta(days=10)
 
 
@@ -60,7 +61,7 @@ STRATEGIES_SPECS = [
         "get_universe": universe.get_gold_crypto_universe,
         # TODO make data-based
         # e.g: ["inverted_vola", 360]
-        "get_weights": assetAllocation.make_inv_vola_aa(10)
+        "get_weights": assetAllocation.make_inv_vola_aa(20)
     },
     # {
     #     "ticker": "GOLD_CRYPTO_60_40",

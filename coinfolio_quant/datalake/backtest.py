@@ -41,6 +41,23 @@ def get_strategy_backtests_series__total_value(database, strategy_ticker, start_
     return list(result)
 
 
+# def get_strategy_backtests_series__weights(database, strategy_ticker, start_date=None, end_date=None):
+#     query_object = {"strategy_ticker": strategy_ticker}
+
+#     if start_date or end_date:
+#         date_query = {}
+#         if start_date:
+#             date_query["$gte"] = start_date
+#         if end_date:
+#             date_query["$lte"] = end_date
+
+#         query_object["date"] = date_query
+
+#     result = database.strategies_backtests.find(
+#         query_object, {"_id": False, "date": 1, "positions": 1})
+#     return list(result)
+
+
 def get_strategy_backtests_series__all__total_value(database):
     STRATEGIES_OVERVIEW = get_overview(database)
     all_total_value_series = []
