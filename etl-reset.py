@@ -3,8 +3,8 @@ import datetime
 from pymongo import MongoClient
 import datetime
 
-# from etl_config import MARKET_DATA_METADATA, STRATEGIES_SPECS
-from etl_config_TEST import MARKET_DATA_METADATA, STRATEGIES_SPECS, RESET_START_DATE, RESET_END_DATE
+# from etl_config_TEST import MARKET_DATA_METADATA, STRATEGIES_SPECS, RESET_START_DATE, RESET_END_DATE
+from etl_config import MARKET_DATA_METADATA, STRATEGIES_SPECS, RESET_START_DATE, RESET_END_DATE
 import etl_db_market_data
 import etl_db_strategy_weights
 import etl_db_strategy_backtest

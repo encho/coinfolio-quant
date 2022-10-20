@@ -140,14 +140,13 @@ def load_backtest_into_database_UPDATE(database, strategy_ticker, start_date, en
     update_dates = get_datetimes_for_period(start_date, end_date)
 
     for current_date in update_dates:
-        print("updating portfolio for the date:")
-        print(strategy_ticker)
-        print(current_date)
+        datestring = f'{current_date:%B %d, %Y}'
+        print("updating portfolio " + strategy_ticker + " for the date " + datestring)
 
         day_of_previous_backtest = current_date - datetime.timedelta(days=1)
 
         previous_backtest = backtestDB.get_backtest_for_date(
-            database, "CFBG1", day_of_previous_backtest)
+            database, strategy_ticker, day_of_previous_backtest)
 
         necessary_tickers = strategiesDB.get_strategy_tickers(
             database=database, ticker=strategy_ticker,
