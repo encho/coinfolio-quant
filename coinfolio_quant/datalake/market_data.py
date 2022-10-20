@@ -1,4 +1,7 @@
 import pandas as pd
+import datetime
+from pymongo import ASCENDING, DESCENDING
+
 
 # TODO eventually into utils
 # TODO more performant, return as soon as first is found
@@ -107,3 +110,37 @@ def get_field_dataframe(database, tickers, start_date=None, end_date=None, field
     series_dict = dict(zip(tickers, series_list))
     df = pd.DataFrame(series_dict)
     return df
+
+
+def get_field_for_nearest_date(database, ticker, field="close", date=None, safety_days_window=10):
+    market_data_series_collection = database["market_data_series"]
+    return_values = {"_id": False, "date": 1, "ticker": 1}
+    return_values[field] = 1
+
+    start_date_for_older_data = date - \
+        datetime.timedelta(days=safety_days_window)
+
+    query_object = {"date": {"$gte": start_date_for_older_data,
+                             "$lte": date}, "ticker": ticker}
+
+    result = market_data_series_collection.find(
+        query_object, return_values).sort("date", DESCENDING).limit(1)
+
+    data = list(result)
+
+    if len(data) != 1:
+        raise Exception(
+            "Could not find exaclty one match for the predicate.")
+
+    unique_result = data[0]
+
+    return {"ticker": unique_result["ticker"], "date": unique_result["date"], "value": unique_result[field]}
+
+
+def get_field_dict_for_date(database, tickers, date=None, field="close"):
+    result = {}
+    for ticker in tickers:
+        ticker_data = get_field_for_nearest_date(
+            database, ticker, field, date)
+        result[ticker] = ticker_data["value"]
+    return result

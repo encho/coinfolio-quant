@@ -1,7 +1,8 @@
 from prettyprinter import pprint
 import pandas as pd
 from pymongo import DESCENDING
-# import datetime
+import datetime
+
 from ..quant_utils import performance_metrics as pmetrics
 from ..quant_utils import date_utils
 from .strategies import get_overview
@@ -41,21 +42,23 @@ def get_strategy_backtests_series__total_value(database, strategy_ticker, start_
     return list(result)
 
 
-# def get_strategy_backtests_series__weights(database, strategy_ticker, start_date=None, end_date=None):
-#     query_object = {"strategy_ticker": strategy_ticker}
+def get_backtest_for_date(database, strategy_ticker, date):
 
-#     if start_date or end_date:
-#         date_query = {}
-#         if start_date:
-#             date_query["$gte"] = start_date
-#         if end_date:
-#             date_query["$lte"] = end_date
+    # TODO make function in utils: ensure_datetime(date)
+    dt = datetime.datetime.combine(date, datetime.datetime.min.time())
 
-#         query_object["date"] = date_query
+    query_object = {"strategy_ticker": strategy_ticker, "date": dt}
 
-#     result = database.strategies_backtests.find(
-#         query_object, {"_id": False, "date": 1, "positions": 1})
-#     return list(result)
+    result = database.strategies_backtests.find(
+        query_object, {"_id": False})
+
+    data = list(result)
+
+    if len(data) != 1:
+        raise Exception(
+            "Could not find exaclty one match for the predicate.")
+
+    return data[0]
 
 
 def get_strategy_backtests_series__all__total_value(database):

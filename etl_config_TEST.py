@@ -3,9 +3,9 @@ import etl_utils_strategy_weights_allocation as assetAllocation
 import etl_utils_strategy_weights_universe as universe
 
 # RESET_START_DATE = datetime.date.today() - datetime.timedelta(days=30)
-RESET_START_DATE = datetime.date.today() - datetime.timedelta(days=20)
+# RESET_START_DATE = datetime.date.today() - datetime.timedelta(days=20)
+RESET_START_DATE = datetime.date.today() - datetime.timedelta(days=60)
 RESET_END_DATE = datetime.date.today() - datetime.timedelta(days=10)
-
 
 UPDATE_START_DATE = datetime.date.today() - datetime.timedelta(days=10)
 UPDATE_END_DATE = datetime.date.today() - datetime.timedelta(days=1)
@@ -43,24 +43,28 @@ MARKET_DATA_METADATA = [
 
 
 STRATEGIES_SPECS = [
-    {
-        "ticker": "BITCOIN_ONLY",
-        "name": "Bitcoin Long Only Strategy",
-        "description": "Bitcoin Long Only Strategy Description",
-        "rebalancing": "DAILY",
-        # TODO make data-based
-        "get_universe": universe.get_bitcoin_only_universe,
-        "get_weights": assetAllocation.get_single_long_only_asset_allocation,
-    },
+    # {
+    #     "ticker": "BITCOIN_ONLY",
+    #     "name": "Bitcoin Long Only Strategy",
+    #     "description": "Bitcoin Long Only Strategy Description",
+    #     "rebalancing": "DAILY",
+    #     "get_universe": universe.get_bitcoin_only_universe,
+    #     "get_weights": assetAllocation.get_single_long_only_asset_allocation,
+    # },
+    # {
+    #     "ticker": "GOLD_ONLY",
+    #     "name": "Gold Long Only Strategy",
+    #     "description": "Gold Long Only Strategy Description",
+    #     "rebalancing": "MONTHLY",
+    #     "get_universe": universe.get_gold_only_universe,
+    #     "get_weights": assetAllocation.get_single_long_only_asset_allocation,
+    # },
     {
         "ticker": "CFBG1",
         "name": "Coinfolio Bitcoin & Gold Balanced Index",
         "description": "Coinfolio Bitcoin & Gold Balanced Index (Description)",
         "rebalancing": "MONTHLY",
-        # TODO make data-based
         "get_universe": universe.get_gold_crypto_universe,
-        # TODO make data-based
-        # e.g: ["inverted_vola", 360]
         "get_weights": assetAllocation.make_inv_vola_aa(20)
     },
     # {
@@ -68,7 +72,6 @@ STRATEGIES_SPECS = [
     #     "name": "Gold Crypto 60-40 Basket",
     #     "description": "Gold & Crypto Portfolio 60/40",
     #     "rebalancing": "MONTHLY",
-    #     # TODO make data-based
     #     "get_universe": universe.get_gold_crypto_universe,
     #     "get_weights": assetAllocation.get_60_40_asset_allocation,
     # },

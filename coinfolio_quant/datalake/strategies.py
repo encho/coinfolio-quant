@@ -38,8 +38,22 @@ def get_strategy_weights_series(database, ticker, start_date=None, end_date=None
 
         query_object["date"] = date_query
 
-    result = database.strategies_weights.find(query_object, {"_id":False})
+    result = database.strategies_weights.find(query_object, {"_id": False})
     return list(result)
+
+
+def get_strategy_weights_for_date(database, ticker, date):
+    query_object = {"ticker": ticker, "date": date}
+
+    result = database.strategies_weights.find(query_object, {"_id": False})
+
+    data = list(result)
+
+    if len(data) != 1:
+        raise Exception(
+            "Could not find exaclty one match for the predicate.")
+
+    return data[0]
 
 
 def get_strategy_tickers(database, ticker, start_date=None, end_date=None):

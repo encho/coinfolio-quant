@@ -398,7 +398,4 @@ def create_next_portfolio(portfolio, weights, prices, date, strategy_info):
         "strategy_weights": weights
     }
 
-    print("returning new portfolio")
-    pprint(new_portfolio)
-
     return new_portfolio

@@ -2,6 +2,10 @@ def get_bitcoin_only_universe(date):
     return ["BTC"]
 
 
+def get_gold_only_universe(date):
+    return ["XAU"]
+
+
 def get_g4_universe(date):
     return ["BTC", "ETH", "XRP", "ADA"]
 
