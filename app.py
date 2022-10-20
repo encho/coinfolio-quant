@@ -60,8 +60,6 @@ def get_strategy_weights_series(ticker):
     json_result = simplejson.dumps(strategy_weights_series, ignore_nan=True,
                                    default=datetime.datetime.isoformat)
 
-    # return json.dumps(strategy_weights_series, default=default)
-    print(json_result)
     return json_result
 
 

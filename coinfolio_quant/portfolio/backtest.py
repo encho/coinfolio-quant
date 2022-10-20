@@ -346,7 +346,6 @@ def create_next_portfolio(portfolio, weights, prices, date, strategy_info):
     weights = amended_weights
     weights = sorted(weights, key=lambda weight: weight["weight"])
 
-    # if (can_not_create_next_portfolio == True):
     if can_not_create_next_portfolio:
         next_portfolio = portfolio.copy()
         next_portfolio["date"] = date
@@ -355,16 +354,8 @@ def create_next_portfolio(portfolio, weights, prices, date, strategy_info):
     should_rebalance = get_should_rebalance(
         strategy_info["rebalancing"], date, portfolio["rebalanced_at"])
 
-    # print("should rebalance?")
-    # print(should_rebalance)
-
     rebalancing_list = create_rebalancing_list(
         portfolio, weights, prices) if should_rebalance else []
-
-    # if should_rebalance:
-    #     print(rebalancing_list)
-    #     pprint(weights)
-    #     pprint(prices)
 
     transactions = create_transactions(
         rebalancing_list, date, portfolio["commission"])
@@ -374,7 +365,6 @@ def create_next_portfolio(portfolio, weights, prices, date, strategy_info):
     transactions_cash_flow = get_transactions_cash_flow(transactions)
     cash = portfolio["cash"] + transactions_cash_flow
 
-    # TODO unify into one?!
     positions = update_positions(portfolio["positions"], transactions)
     positions = update_positions_values_and_weights(positions, prices)
 

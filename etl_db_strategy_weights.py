@@ -1,5 +1,3 @@
-# import etl_utils_strategy_weights_allocation as assetAllocation
-# import etl_utils_strategy_weights_universe as universe
 import datetime
 
 
