@@ -2,15 +2,10 @@ import datetime
 import etl_utils_strategy_weights_allocation as assetAllocation
 import etl_utils_strategy_weights_universe as universe
 
-# RESET_START_DATE = datetime.date(2014, 9, 17)
-# RESET_END_DATE = datetime.date.today() - datetime.timedelta(days=1)
-RESET_START_DATE = datetime.date(2020, 9, 17)
-RESET_END_DATE = datetime.date.today() - datetime.timedelta(days=10)
+RESET_START_DATE = datetime.date(2014, 9, 17)
+RESET_END_DATE = datetime.date.today() - datetime.timedelta(days=1)
 
-# UPDATE_START_DATE = datetime.date.today() - datetime.timedelta(days=7)
-# UPDATE_END_DATE = datetime.date.today() - datetime.timedelta(days=1)
-
-UPDATE_START_DATE = datetime.date.today() - datetime.timedelta(days=11)
+UPDATE_START_DATE = datetime.date.today() - datetime.timedelta(days=7)
 UPDATE_END_DATE = datetime.date.today() - datetime.timedelta(days=1)
 
 # TODO differentiate between exchange rates/ prices/ indices....?
