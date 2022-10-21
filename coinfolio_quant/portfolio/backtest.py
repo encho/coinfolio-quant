@@ -1,7 +1,10 @@
 import copy
-
+import numpy as np
+from prettyprinter import pprint
 
 # TODO eventually into utils
+
+
 def find_unique(predicate, data):
     filtered_items = list(filter(predicate, data))
 
@@ -290,6 +293,22 @@ def update_positions(positions, transactions):
     return only_positions_greater_zero
 
 
+def update_positions_values_and_weights(positions, prices):
+    currency = "USD"
+
+    for position in positions:
+        price = prices[position["ticker"]+"-"+currency]
+        position["value"] = price * position["quantity"]
+
+    total_value = sum(position["value"] for position in positions)
+    for position in positions:
+        position["weight"] = position["value"] / total_value
+
+    positions = sorted(positions, key=lambda position: position["weight"])
+
+    return positions
+
+
 def get_should_rebalance_DAILY(date, last_rebalance_date):
     return date > last_rebalance_date
 
@@ -311,6 +330,27 @@ def get_should_rebalance(rebalancing, date, last_rebalance_date):
 
 def create_next_portfolio(portfolio, weights, prices, date, strategy_info):
 
+    # we always ffill prices which are passed here, i.e. we have a price for
+    # each day EXCEPT at the very start of the backtest, where we may not be able
+    # to successfully ffill (e.g. if we start the backtest on a saturday with no gold prices)
+    # THUS: if we happen to not have a price it has to be at the start of the backtest and in that
+    # case we will return the original start portfolio with the current date
+    can_not_create_next_portfolio = any(
+        np.isnan(price) for price in prices.values())
+
+    # check if for some edge case scenario weights are na's and replace them with zero
+    amended_weights = []
+    for weight in weights:
+        amended_weights.append(
+            {"ticker": weight["ticker"], "weight": weight["weight"] if not np.isnan(weight["weight"]) else 0})
+    weights = amended_weights
+    weights = sorted(weights, key=lambda weight: weight["weight"])
+
+    if can_not_create_next_portfolio:
+        next_portfolio = portfolio.copy()
+        next_portfolio["date"] = date
+        return next_portfolio
+
     should_rebalance = get_should_rebalance(
         strategy_info["rebalancing"], date, portfolio["rebalanced_at"])
 
@@ -326,6 +366,7 @@ def create_next_portfolio(portfolio, weights, prices, date, strategy_info):
     cash = portfolio["cash"] + transactions_cash_flow
 
     positions = update_positions(portfolio["positions"], transactions)
+    positions = update_positions_values_and_weights(positions, prices)
 
     positions_market_value = get_positions_market_value(
         positions, portfolio["currency"], prices)
@@ -343,7 +384,8 @@ def create_next_portfolio(portfolio, weights, prices, date, strategy_info):
         "total_value": cash + positions_market_value,
         "commissions_paid": transactions_commissions,
         "total_commissions_paid": transactions_commissions + portfolio["commissions_paid"],
-        "rebalanced_at": date if should_rebalance else portfolio["rebalanced_at"]
+        "rebalanced_at": date if should_rebalance else portfolio["rebalanced_at"],
+        "strategy_weights": weights
     }
 
     return new_portfolio

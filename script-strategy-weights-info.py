@@ -16,19 +16,26 @@ client = MongoClient(MONGO_CONNECTION_STRING)
 database = client["coinfolio_prod"]
 
 
-def get_strategy_weights_info(database, ticker):
-    max_date_result = database.strategies_weights.find(
-        {"ticker": ticker}).sort("date", DESCENDING).limit(1)
-    min_date_result = database.strategies_weights.find(
-        {"ticker": ticker}).sort("date", ASCENDING).limit(1)
-    max_date = list(max_date_result)[0]["date"]
-    min_date = list(min_date_result)[0]["date"]
-    return {
-        "max_date": max_date,
-        "min_date": min_date,
-    }
+# def get_strategy_weights_info(database, ticker):
+#     max_date_result = database.strategies_weights.find(
+#         {"ticker": ticker}).sort("date", DESCENDING).limit(1)
+#     min_date_result = database.strategies_weights.find(
+#         {"ticker": ticker}).sort("date", ASCENDING).limit(1)
+#     max_date = list(max_date_result)[0]["date"]
+#     min_date = list(min_date_result)[0]["date"]
+#     return {
+#         "max_date": max_date,
+#         "min_date": min_date,
+#     }
 
 
-info = get_strategy_weights_info(database, "CFBG1")
+# info = get_strategy_weights_info(database, "CFBG1")
 
-print(info)
+def get_backtest(database, ticker, date):
+    return "hehehee"
+
+
+backtest = get_backtest(database, ticker, date):
+
+
+pprint(backtest)
