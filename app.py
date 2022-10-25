@@ -10,7 +10,6 @@ import time
 import simplejson
 
 import coinfolio_quant.datalake.market_data as marketDataDB
-import coinfolio_quant.datalake.cryptocurrencies as cryptocurrenciesDB
 import coinfolio_quant.datalake.strategies as strategiesDB
 import coinfolio_quant.datalake.backtest as backtestsDB
 import coinfolio_quant.datalake.analytics_tools as analyticsToolsDB
@@ -138,24 +137,6 @@ def get_market_data_dataframe(ticker):
         database, ticker=ticker)
 
     result = df.to_json(orient="table")
-
-    return result
-
-
-# TODO: deprecate
-@app.route('/cryptocurrencies')
-def cryptocurrencies():
-    cryptocurrencies_overview = cryptocurrenciesDB.get_overview(database)
-    return json.dumps(cryptocurrencies_overview, default=default)
-
-
-# TODO: deprecate
-@app.route('/cryptocurrencies/<ticker>')
-def cryptocurrency_series(ticker):
-    cryptocurrency_df = cryptocurrenciesDB.get_cryptocurrency_dataframe(
-        database, ticker=ticker)
-
-    result = cryptocurrency_df.to_json(orient="table")
 
     return result
 
