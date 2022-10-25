@@ -5,20 +5,13 @@ import os
 from prettyprinter import pprint
 import numpy as np
 
-import coinfolio_quant.datalake.backtest as backtest
-import coinfolio_quant.datalake.cryptocurrencies as cryptocurrencies
-
+import coinfolio_quant.datalake.market_data as marketDataDB
 
 MONGO_CONNECTION_STRING = os.environ["MONGO_CONNECTION_STRING"]
 
 # TODO eventually close connection at end of script
 client = MongoClient(MONGO_CONNECTION_STRING)
 database = client["coinfolio_prod"]
-
-# index_series = backtest.get_performance_total_value_series(
-#     database, "GOLD_CRYPTO_60_40")
-
-# print(index_series)
 
 
 def inverted_vola_weightings(list_of_volas):
@@ -42,7 +35,7 @@ def get_inverted_volatility_asset_allocation(date, universe):
     price_tickers = list(
         map(lambda ticker: f'{ticker}-{base_currency}', universe))
 
-    data = cryptocurrencies.get_field_dataframe(
+    data = marketDataDB.get_field_dataframe(
         database, price_tickers, field="percentage_change", start_date=start_date, end_date=date)
 
     # QUICK-FIX we remove the weekdays again which were ffilled before in the etl pipeline
@@ -77,7 +70,7 @@ def get_inverted_volatility_asset_allocation(date, universe):
 
 # START_DATE = END_DATE - datetime.timedelta(days=NUMBER_DAYS-1)
 
-# data = cryptocurrencies.get_field_dataframe(
+# data = marketDataDB.get_field_dataframe(
 #     database, ["BTC-USD", "XAU-USD"], field="percentage_change", start_date=START_DATE, end_date=END_DATE)
 
 # QUICK-FIX: put back nan's during weekends for gold
