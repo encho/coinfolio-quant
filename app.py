@@ -170,6 +170,35 @@ def ftx_get_positions():
     return json.dumps(result)
 
 
+@app.route("/ftx/orders")
+def ftx_get_orders():
+
+    args = request.args
+
+    # TODO we should return error if these query params are not available!
+    api_key = args.get("api_key")
+    api_secret = args.get("api_secret")
+
+    result = ftxWrapper.get_orders(api_key=api_key, api_secret=api_secret)
+    return json.dumps(result)
+
+
+@app.route("/ftx/orders/history")
+def ftx_get_orders_history():
+
+    args = request.args
+
+    # TODO we should return error if these query params are not available!
+    api_key = args.get("api_key")
+    api_secret = args.get("api_secret")
+
+    result = ftxWrapper.get_orders_history(
+        api_key=api_key, api_secret=api_secret)
+
+    json_result = json.dumps(result)
+    return json_result
+
+
 @app.route("/ftx/rebalance")
 def ftx_rebalance():
 
