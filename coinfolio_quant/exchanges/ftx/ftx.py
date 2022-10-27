@@ -104,6 +104,14 @@ class FtxClient:
 
         return positions
 
+    def get_orders(self) -> List[dict]:
+        orders = self._get(f'orders')
+        return orders
+
+    def get_orders_history(self) -> List[dict]:
+        orders_history = self._get(f'orders/history')
+        return orders_history
+
     def execute_liquidations(self, liquidations):
         for liquidation in liquidations:
             self.execute_liquidation(ticker=liquidation["ticker"],
@@ -176,3 +184,15 @@ def get_positions(api_key, api_secret):
 def rebalance_portfolio(api_key, api_secret, target_weights):
     c = FtxClient(api_key=api_key, api_secret=api_secret)
     return c.trigger_rebalance(target_weights)
+
+
+# TODO deprecate, use directly in app.py
+def get_orders(api_key, api_secret):
+    c = FtxClient(api_key=api_key, api_secret=api_secret)
+    return c.get_orders()
+
+
+# TODO deprecate, use directly in app.py
+def get_orders_history(api_key, api_secret):
+    c = FtxClient(api_key=api_key, api_secret=api_secret)
+    return c.get_orders_history()
