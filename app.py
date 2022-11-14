@@ -8,6 +8,7 @@ from cryptocmd import CmcScraper
 import datetime
 import time
 import simplejson
+import urllib
 
 import coinfolio_quant.datalake.market_data as marketDataDB
 import coinfolio_quant.datalake.strategies as strategiesDB
@@ -156,6 +157,22 @@ def crypto_series():
     return result
 
 
+@app.route("/ftx/account")
+def ftx_get_account():
+
+    args = request.args
+
+    # TODO we should return error if these query params are not available!
+    api_key = args.get("api_key")
+    api_secret = args.get("api_secret")
+    account_name = urllib.parse.unquote(args.get("account_name"))
+
+    result = ftxWrapper.get_account(
+        api_key=api_key, api_secret=api_secret, account_name=account_name)
+
+    return json.dumps(result)
+
+
 @app.route("/ftx/positions")
 def ftx_get_positions():
 
@@ -164,8 +181,10 @@ def ftx_get_positions():
     # TODO we should return error if these query params are not available!
     api_key = args.get("api_key")
     api_secret = args.get("api_secret")
+    account_name = urllib.parse.unquote(args.get("account_name"))
 
-    result = ftxWrapper.get_positions(api_key=api_key, api_secret=api_secret)
+    result = ftxWrapper.get_positions(
+        api_key=api_key, api_secret=api_secret, account_name=account_name)
 
     return json.dumps(result)
 
@@ -178,8 +197,10 @@ def ftx_get_orders():
     # TODO we should return error if these query params are not available!
     api_key = args.get("api_key")
     api_secret = args.get("api_secret")
+    account_name = urllib.parse.unquote(args.get("account_name"))
 
-    result = ftxWrapper.get_orders(api_key=api_key, api_secret=api_secret)
+    result = ftxWrapper.get_orders(
+        api_key=api_key, api_secret=api_secret, account_name=account_name)
     return json.dumps(result)
 
 
@@ -191,9 +212,10 @@ def ftx_get_orders_history():
     # TODO we should return error if these query params are not available!
     api_key = args.get("api_key")
     api_secret = args.get("api_secret")
+    account_name = urllib.parse.unquote(args.get("account_name"))
 
     result = ftxWrapper.get_orders_history(
-        api_key=api_key, api_secret=api_secret)
+        api_key=api_key, api_secret=api_secret, account_name=account_name)
 
     json_result = json.dumps(result)
     return json_result
@@ -209,6 +231,7 @@ def ftx_rebalance():
     # TODO we should return error if these query params are not available!
     api_key = args.get("api_key")
     api_secret = args.get("api_secret")
+    account_name = urllib.parse.unquote(args.get("account_name"))
 
     # QUICK-FIX: this fixture will need to change once we have multiple strategies in the retail app
     strategy_ticker = "CFBG1"
@@ -219,7 +242,7 @@ def ftx_rebalance():
     target_weights = strategy_latest_weights["weights"]
 
     result = ftxWrapper.rebalance_portfolio(
-        api_key=api_key, api_secret=api_secret, target_weights=target_weights)
+        api_key=api_key, api_secret=api_secret, account_name=account_name, target_weights=target_weights)
 
     return json.dumps(result)
 
@@ -232,9 +255,10 @@ def ftx_persist_portfolio_snapshot():
     # TODO we should return error if these query params are not available!
     api_key = args.get("api_key")
     api_secret = args.get("api_secret")
+    account_name = urllib.parse.unquote(args.get("account_name"))
     user_id = args.get("user_id")
 
-    ftx_client = ftxWrapper.FtxClient(api_key=api_key, api_secret=api_secret)
+    ftx_client = ftxWrapper.FtxClient(api_key=api_key, api_secret=api_secret, account_name=account_name)
 
     clientPortfoliosDB.persist_portfolio_snapshot(
         database=database, ftx_client=ftx_client, client_id=user_id)

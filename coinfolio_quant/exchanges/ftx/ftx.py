@@ -17,11 +17,15 @@ FTX_ASSET_PROXIES = {"XAU": "PAXG"}
 class FtxClient:
     _ENDPOINT = 'https://ftx.com/api/'
 
-    def __init__(self, api_key=None, api_secret=None, subaccount_name=None) -> None:
+    def __init__(self, api_key=None, api_secret=None, account_name=None) -> None:
         self._session = Session()
         self._api_key = api_key
         self._api_secret = api_secret
-        self._subaccount_name = subaccount_name
+
+        self._subaccount_name = account_name
+        if account_name == "Main Account":
+            # self._subaccount_name = "Coinfolio"
+            self._subaccount_name = None
 
     def _get(self, path: str, params: Optional[Dict[str, Any]] = None) -> Any:
         return self._request('GET', path, params=params)
@@ -47,6 +51,7 @@ class FtxClient:
         request.headers['FTX-KEY'] = self._api_key
         request.headers['FTX-SIGN'] = signature
         request.headers['FTX-TS'] = str(ts)
+
         if self._subaccount_name:
             request.headers['FTX-SUBACCOUNT'] = urllib.parse.quote(
                 self._subaccount_name)
@@ -91,6 +96,9 @@ class FtxClient:
 
     def get_markets(self) -> List[dict]:
         return self._get(f'markets')
+
+    def get_account(self) -> List[dict]:
+        return self._get(f'account')
 
     def get_positions(self) -> List[dict]:
         wallet_balances = self._get(f'wallet/balances')
@@ -175,24 +183,35 @@ class FtxClient:
 
 
 # TODO deprecate, use directly in app.py
-def get_positions(api_key, api_secret):
-    c = FtxClient(api_key=api_key, api_secret=api_secret)
+def get_positions(api_key, api_secret, account_name):
+    c = FtxClient(api_key=api_key, api_secret=api_secret,
+                  account_name=account_name)
     return c.get_positions()
 
 
 # TODO deprecate, use directly in app.py
-def rebalance_portfolio(api_key, api_secret, target_weights):
-    c = FtxClient(api_key=api_key, api_secret=api_secret)
+def rebalance_portfolio(api_key, api_secret, account_name, target_weights):
+    c = FtxClient(api_key=api_key, api_secret=api_secret,
+                  account_name=account_name)
     return c.trigger_rebalance(target_weights)
 
 
 # TODO deprecate, use directly in app.py
-def get_orders(api_key, api_secret):
-    c = FtxClient(api_key=api_key, api_secret=api_secret)
+def get_orders(api_key, api_secret, account_name):
+    c = FtxClient(api_key=api_key, api_secret=api_secret,
+                  account_name=account_name)
     return c.get_orders()
 
 
 # TODO deprecate, use directly in app.py
-def get_orders_history(api_key, api_secret):
-    c = FtxClient(api_key=api_key, api_secret=api_secret)
+def get_orders_history(api_key, api_secret, account_name):
+    c = FtxClient(api_key=api_key, api_secret=api_secret,
+                  account_name=account_name)
     return c.get_orders_history()
+
+
+# TODO deprecate, use directly in app.py
+def get_account(api_key, api_secret, account_name):
+    c = FtxClient(api_key=api_key, api_secret=api_secret,
+                  account_name=account_name)
+    return c.get_account()
