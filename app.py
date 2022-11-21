@@ -16,6 +16,7 @@ import coinfolio_quant.datalake.backtest as backtestsDB
 import coinfolio_quant.datalake.analytics_tools as analyticsToolsDB
 import coinfolio_quant.datalake.client_portfolios as clientPortfoliosDB
 import coinfolio_quant.exchanges.ftx.ftx as ftxWrapper
+import coinfolio_quant.exchanges.binance.binance as Binance
 import coinfolio_quant.quant_utils.date_utils as date_utils
 import coinfolio_quant.quant_utils.series_warnings as series_warnings
 
@@ -258,7 +259,8 @@ def ftx_persist_portfolio_snapshot():
     account_name = urllib.parse.unquote(args.get("account_name"))
     user_id = args.get("user_id")
 
-    ftx_client = ftxWrapper.FtxClient(api_key=api_key, api_secret=api_secret, account_name=account_name)
+    ftx_client = ftxWrapper.FtxClient(
+        api_key=api_key, api_secret=api_secret, account_name=account_name)
 
     clientPortfoliosDB.persist_portfolio_snapshot(
         database=database, ftx_client=ftx_client, client_id=user_id)
@@ -292,6 +294,21 @@ def ftx_get_portfolio_value_series():
         database=database, client_id=user_id)
 
     return json.dumps(portfolio_value_series, default=default)
+
+
+@app.route("/binance/positions")
+def binance_get_positions():
+    args = request.args
+
+    # TODO we should return error if these query params are not available!
+    api_key = args.get("api_key")
+    api_secret = args.get("api_secret")
+    account_name = urllib.parse.unquote(args.get("account_name"))
+
+    result = Binance.get_positions(
+        api_key=api_key, api_secret=api_secret, account_name=account_name)
+
+    return json.dumps(result)
 
 
 @app.route("/analytics-tools/correlation-visualizer")
