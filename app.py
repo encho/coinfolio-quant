@@ -311,6 +311,69 @@ def binance_get_positions():
     return json.dumps(result)
 
 
+@app.route("/binance/persist_portfolio_snapshot")
+def binance_persist_portfolio_snapshot():
+
+    args = request.args
+
+    # TODO we should return error if these query params are not available!
+    api_key = args.get("api_key")
+    api_secret = args.get("api_secret")
+    account_name = urllib.parse.unquote(args.get("account_name"))
+    user_id = args.get("user_id")
+
+    positions = Binance.get_positions(
+        api_key=api_key, api_secret=api_secret, account_name=account_name)
+
+    clientPortfoliosDB.persist_portfolio_snapshot_NEW(
+        database=database, positions=positions, client_id=user_id)
+
+    return json.dumps({"status": 200})
+
+
+@app.route("/binance/orders/history")
+def binance_get_orders_history():
+
+    args = request.args
+
+    # TODO we should return error if these query params are not available!
+    api_key = args.get("api_key")
+    api_secret = args.get("api_secret")
+    account_name = urllib.parse.unquote(args.get("account_name"))
+
+    result = Binance.get_orders_history(
+        api_key=api_key, api_secret=api_secret, account_name=account_name)
+
+    json_result = json.dumps(result)
+    return json_result
+
+
+@app.route("/binance/rebalance")
+def binance_rebalance():
+
+    args = request.args
+
+    # TODO get user id from secure! JWT token and then use the JWT to retrieve api_key, api_secret and strategy_ticker for user from coinfolio js api!!
+
+    # TODO we should return error if these query params are not available!
+    api_key = args.get("api_key")
+    api_secret = args.get("api_secret")
+    account_name = urllib.parse.unquote(args.get("account_name"))
+
+    # QUICK-FIX: this fixture will need to change once we have multiple strategies in the retail app
+    strategy_ticker = "CFBG1"
+
+    strategy_latest_weights = backtestsDB.get_strategy_latest_weights(
+        database, strategy_ticker)
+
+    target_weights = strategy_latest_weights["weights"]
+
+    result = Binance.rebalance_portfolio(
+        api_key=api_key, api_secret=api_secret, account_name=account_name, target_weights=target_weights)
+
+    return json.dumps(result)
+
+
 @app.route("/analytics-tools/correlation-visualizer")
 def analytics_tools_correlation_visualizer():
 

@@ -60,31 +60,31 @@ assert(get_total_positions_value(test_positions) == 30)
 
 
 # TODO to be coherent we should have the positins field called "usd_value"
-def create_target_position(target_weight_item, portfolio_value_in_usd, market_data_list):
+def create_target_position(target_weight_item, portfolio_value_in_usd, market_data_list, quote_currency="USD"):
 
     it = target_weight_item
 
     position_value_in_usd = it["weight"] * portfolio_value_in_usd
 
     base_currency = it["ticker"]
-    quote_currency = "USD"
+    # quote_currency = "USD"
     instrument_price_in_usd = None
 
-    if base_currency == quote_currency:
-        instrument_price_in_usd = 1
-    else:
-        def is_position_market_data_item(
-            market_data_item): return market_data_item["baseCurrency"] == base_currency and market_data_item["quoteCurrency"] == quote_currency
+    # if base_currency == quote_currency:
+    #     instrument_price_in_usd = 1
+    # else:
+    def is_position_market_data_item(
+        market_data_item): return market_data_item["baseCurrency"] == base_currency and market_data_item["quoteCurrency"] == quote_currency
 
-        relevant_market_data_item = find_unique(
-            is_position_market_data_item, market_data_list)
+    relevant_market_data_item = find_unique(
+        is_position_market_data_item, market_data_list)
 
-        instrument_price_in_usd = relevant_market_data_item["price"]
+    instrument_price_in_usd = relevant_market_data_item["price"]
 
-        ideal_quantity = position_value_in_usd / instrument_price_in_usd
-        lot_size = relevant_market_data_item["minProvideSize"]
-        lots_amount = floor(ideal_quantity / lot_size)
-        quantity = lot_size * lots_amount
+    ideal_quantity = position_value_in_usd / instrument_price_in_usd
+    lot_size = relevant_market_data_item["minProvideSize"]
+    lots_amount = floor(ideal_quantity / lot_size)
+    quantity = lot_size * lots_amount
 
     target_position = {
         "ticker": it["ticker"],
@@ -98,10 +98,10 @@ def create_target_position(target_weight_item, portfolio_value_in_usd, market_da
     return target_position
 
 
-def create_target_positions(target_weights, portfolio_value_in_usd, market_data_list):
+def create_target_positions(target_weights, portfolio_value_in_usd, market_data_list, quote_currency="USD"):
     target_positions = [create_target_position(it,
                                                portfolio_value_in_usd,
-                                               market_data_list)
+                                               market_data_list, quote_currency=quote_currency)
                         for it in target_weights]
 
     return target_positions
@@ -198,19 +198,27 @@ assert(create_liquidation(test_current_position, test_target_positions)
        == {"ticker": "AAA", "liquidation_quantity": 90})
 
 
-def create_liquidations(current_positions, target_positions):
+def create_liquidations(current_positions, target_positions, account_currency="USD"):
     all_liquidations = [create_liquidation(
         current_position, target_positions) for current_position in current_positions]
 
     positive_liquidations = list(
         filter(lambda it: it["liquidation_quantity"] > 0, all_liquidations))
     non_usd_liquidations = list(
-        filter(lambda it: it["ticker"] != "USD", positive_liquidations))
+        filter(lambda it: it["ticker"] != account_currency, positive_liquidations))
 
     return non_usd_liquidations
 
 
-def create_rebalancing_buys(target_positions, current_positions, market_data_list):
+def create_rebalancing_buys(target_positions, current_positions, market_data_list, quote_currency="USD"):
+    # print("in rebalancing buys::::::::::::::")
+    # print("target_positions")
+    # print(target_positions)
+    # print("current_positions")
+    # print(current_positions)
+    # print("market_data_list")
+    # print(market_data_list)
+    # print("==========================")
     rebalancing_buys = []
     for target_position in target_positions:
         ticker = target_position["ticker"]
@@ -222,7 +230,8 @@ def create_rebalancing_buys(target_positions, current_positions, market_data_lis
             ideal_buy_quantity = ideal_buy_quantity - \
                 matching_current_position["quantity"]
 
-        market_data_item = find_market_data_item(market_data_list, ticker)
+        market_data_item = find_market_data_item(
+            market_data_list, ticker, quote_currency=quote_currency)
 
         lot_size = market_data_item["minProvideSize"]
         lots_amount = floor(ideal_buy_quantity / lot_size)
