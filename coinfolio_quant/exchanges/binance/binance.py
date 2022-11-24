@@ -5,6 +5,7 @@ from coinfolio_quant.portfolio.rebalancing import create_target_positions, get_t
 from coinfolio_quant.quant_utils import asset_allocation_utils
 # import math
 from decimal import Decimal, ROUND_DOWN
+from prettyprinter import pprint
 
 
 def find_unique(predicate, data):
@@ -374,11 +375,26 @@ def get_orders_history(api_key, api_secret, account_name):
             "future": "N/A",
             "id": order["orderId"],
             "clientId": order["clientOrderId"],
+            "timestamp": int(order["time"])
         }
 
-    orders = client.get_orders("ETHBTC")
-    parsed_orders = list(map(lambda order: parse_order(order), orders))
-    return parsed_orders
+    symbols = [
+        "ETHBTC",
+        "BTCUSDT",
+        "ETHUSDT",
+        "PAXGUSDT",
+    ]
+
+    orders = []
+    for symbol in symbols:
+        new_orders = client.get_orders(symbol)
+        new_parsed_orders = list(
+            map(lambda order: parse_order(order), new_orders))
+        orders.extend(new_parsed_orders)
+
+    orders.sort(key=lambda order: order["timestamp"])
+
+    return orders
 
 # def get_account(api_key, api_secret, account_name):
 #     c = FtxClient(api_key=api_key, api_secret=api_secret,
