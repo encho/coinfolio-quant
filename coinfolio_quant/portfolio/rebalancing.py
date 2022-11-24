@@ -67,12 +67,7 @@ def create_target_position(target_weight_item, portfolio_value_in_usd, market_da
     position_value_in_usd = it["weight"] * portfolio_value_in_usd
 
     base_currency = it["ticker"]
-    # quote_currency = "USD"
-    instrument_price_in_usd = None
 
-    # if base_currency == quote_currency:
-    #     instrument_price_in_usd = 1
-    # else:
     def is_position_market_data_item(
         market_data_item): return market_data_item["baseCurrency"] == base_currency and market_data_item["quoteCurrency"] == quote_currency
 
@@ -211,33 +206,44 @@ def create_liquidations(current_positions, target_positions, account_currency="U
 
 
 def create_rebalancing_buys(target_positions, current_positions, market_data_list, quote_currency="USD"):
-    # print("in rebalancing buys::::::::::::::")
-    # print("target_positions")
-    # print(target_positions)
-    # print("current_positions")
-    # print(current_positions)
-    # print("market_data_list")
-    # print(market_data_list)
-    # print("==========================")
+
+    available_cash = find_unique(
+        lambda pos: pos["ticker"] == quote_currency, current_positions)["usdValue"]
+
+    necessary_cash = 0
+    buys_in_usd = []
+    for target_position in target_positions:
+        ticker = target_position["ticker"]
+        usd_value = target_position["usdValue"]
+        current_matching_position = find_maximally_one_or_none(
+            lambda pos: pos["ticker"] == ticker, current_positions)
+        already_have_usd_value = 0 if current_matching_position is None else current_matching_position[
+            "usdValue"]
+        missing_usd_value = max([usd_value - already_have_usd_value, 0])
+
+        buys_in_usd.append({"ticker": ticker, "usdValue": missing_usd_value})
+        necessary_cash = necessary_cash + missing_usd_value
+
+    possibility_fraction = available_cash / necessary_cash
+
+    adjusted_buys_in_usd = list(map(lambda it: {
+                                "ticker": it["ticker"], "usdValue": it["usdValue"] * possibility_fraction}, buys_in_usd))
+
     rebalancing_buys = []
     for target_position in target_positions:
         ticker = target_position["ticker"]
-        matching_current_position = find_maximally_one_or_none(
-            lambda p: p["ticker"] == ticker, current_positions)
-
-        ideal_buy_quantity = target_position["quantity"]
-        if matching_current_position:
-            ideal_buy_quantity = ideal_buy_quantity - \
-                matching_current_position["quantity"]
 
         market_data_item = find_market_data_item(
             market_data_list, ticker, quote_currency=quote_currency)
 
-        lot_size = market_data_item["minProvideSize"]
-        lots_amount = floor(ideal_buy_quantity / lot_size)
-        buy_quantity = lot_size * lots_amount
+        adjusted_buy_item = find_unique(
+            lambda it: it["ticker"] == ticker, adjusted_buys_in_usd)
 
-        rebalancing_buys.append({"ticker": ticker, "buy_quantity": buy_quantity,
+        ideal_buy_quantity = adjusted_buy_item["usdValue"] / \
+            market_data_item["price"]
+
+        # TODO integrate the clean_lotted_buy_quantity_decimal (string)?
+        rebalancing_buys.append({"ticker": ticker,
                                 "ideal_buy_quantity": ideal_buy_quantity})
 
     return rebalancing_buys

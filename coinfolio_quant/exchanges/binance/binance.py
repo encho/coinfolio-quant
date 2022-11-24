@@ -293,8 +293,6 @@ def rebalance_portfolio(api_key, api_secret, account_name, target_weights):
     print(market_data_list_post_liquidations)
 
     # 9. determine new target_positions
-    # target_positions_post_liquidations = create_target_positions(
-    #     target_weights, liquidated_total_portfolio_value, market_data_list_post_liquidations, quote_currency="BTC")
     target_positions_post_liquidations = create_target_positions(
         target_weights, liquidated_total_portfolio_value, market_data_list_post_liquidations, quote_currency="USDT")
     print("----------------------")
@@ -303,24 +301,20 @@ def rebalance_portfolio(api_key, api_secret, account_name, target_weights):
     print(target_positions_post_liquidations)
 
     # 10. get rebalancing buys
-    # rebalancing_buys = create_rebalancing_buys(
-    #     target_positions_post_liquidations, liquidated_positions,
-    #     market_data_list_post_liquidations, quote_currency="BTC")
     rebalancing_buys = create_rebalancing_buys(
         target_positions_post_liquidations, liquidated_positions,
         market_data_list_post_liquidations, quote_currency="USDT")
     print("----------------------")
-    print("rebalancing_buys")
+    print("rebalancing_buys NEW")
     print("----------------------")
     print(rebalancing_buys)
 
     # 11. execute rebalancing buys
-
     def execute_rebalancing_buys(the_rebalancing_buys, account_currency="USDT"):
         for rebalancing_buy in the_rebalancing_buys:
             ticker = rebalancing_buy["ticker"]
             market = ticker + account_currency
-            buy_quantity = rebalancing_buy["buy_quantity"]
+            buy_quantity = rebalancing_buy["ideal_buy_quantity"]
 
             market_info = find_unique(
                 lambda it: it["baseCurrency"] == ticker and it["quoteCurrency"] == account_currency, market_data_list_post_liquidations)
@@ -340,13 +334,6 @@ def rebalance_portfolio(api_key, api_secret, account_name, target_weights):
             else:
                 clean_lotted_buy_quantity_string = str(
                     lotted_buy_quantity_string)
-
-            print("***************")
-            print("BUYING FOR: " + ticker)
-            print("QUANTITY::::")
-            print(lotted_buy_quantity)
-            print(clean_lotted_buy_quantity_string)
-            print("***************")
 
             try:
                 if buy_quantity > 0:
