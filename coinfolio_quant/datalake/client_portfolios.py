@@ -20,10 +20,20 @@ def make_portfolio_snapshot_item_for_database(client_id, positions):
     return portfolio_item
 
 
+# TODO deprecate as it is FTX specific
 def persist_portfolio_snapshot(database, ftx_client, client_id):
     portfolio_snapshots_collection = database["portfolio_snapshots"]
     api_key = ftx_client._api_key
     positions = ftx_client.get_positions()
+    portfolio_snapshot_item = make_portfolio_snapshot_item_for_database(
+        client_id, positions)
+    result = portfolio_snapshots_collection.insert_one(
+        portfolio_snapshot_item)
+    return {"_id": result.inserted_id}
+
+
+def persist_portfolio_snapshot_NEW(database, positions, client_id):
+    portfolio_snapshots_collection = database["portfolio_snapshots"]
     portfolio_snapshot_item = make_portfolio_snapshot_item_for_database(
         client_id, positions)
     result = portfolio_snapshots_collection.insert_one(
@@ -72,6 +82,6 @@ def get_portfolio_value_series(database, client_id):
         map(lambda it: {"index": it["timestamp"], "value": it["usd_value"]}, series_list))
 
     resampled_series_list = resample_irregular_timeseries_list(
-        index_value_list)
+        index_value_list, freq="1T")
 
     return resampled_series_list
