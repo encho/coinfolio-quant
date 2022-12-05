@@ -11,9 +11,9 @@ api_key = os.environ["API_KEY"]
 api_secret = os.environ["API_SECRET"]
 
 
-# a mapping which defines which assets on FTX should be taken as a proxy instrument
-# for any given key (e.g. "XAU" in our system would be implemented with "PAXG" on FTX exchange)
-FTX_ASSET_PROXIES = {"XAU": "PAXG"}
+# a mapping which defines which assets on Binance should be taken as a proxy instrument
+# for any given key (e.g. "XAU" in our system would be implemented with "PAXG" on Binance exchange)
+BINANCE_ASSET_PROXIES = {"XAU": "PAXG"}
 
 client = Spot(key=api_key, secret=api_secret)
 
@@ -197,9 +197,9 @@ def rebalance_portfolio(api_key, api_secret, account_name, target_weights):
     # print(account_name)
     # print(target_weights)
 
-    # 0. replace tickers with the proxy-tickers for FTX
+    # 0. replace tickers with the proxy-tickers for Binance
     target_weights = asset_allocation_utils.insert_assets_proxies(
-        target_weights, FTX_ASSET_PROXIES)
+        target_weights, BINANCE_ASSET_PROXIES)
 
     print("----------------------")
     print("target_weights")
