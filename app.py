@@ -15,10 +15,12 @@ import coinfolio_quant.datalake.strategies as strategiesDB
 import coinfolio_quant.datalake.backtest as backtestsDB
 import coinfolio_quant.datalake.analytics_tools as analyticsToolsDB
 import coinfolio_quant.datalake.client_portfolios as clientPortfoliosDB
-import coinfolio_quant.exchanges.ftx.ftx as ftxWrapper
+# import coinfolio_quant.exchanges.ftx.ftx as ftxWrapper
 import coinfolio_quant.exchanges.binance.binance as Binance
+from coinfolio_quant.exchanges.binance.persist import persist_all_portfolio_snapshots as binance_persist_all_portfolio_snapshots
 import coinfolio_quant.quant_utils.date_utils as date_utils
 import coinfolio_quant.quant_utils.series_warnings as series_warnings
+from coinfolio_quant.coinfolio_api.coinfolio_api import get_users as coinfolio_get_users
 
 
 MONGO_CONNECTION_STRING = os.environ["MONGO_CONNECTION_STRING"]
@@ -201,7 +203,7 @@ def binance_persist_portfolio_snapshot():
     positions = Binance.get_positions(
         api_key=api_key, api_secret=api_secret, account_name=account_name)
 
-    clientPortfoliosDB.persist_portfolio_snapshot_NEW(
+    clientPortfoliosDB.persist_portfolio_snapshot(
         database=database, positions=positions, client_id=user_id)
 
     return json.dumps({"status": 200})
@@ -248,6 +250,14 @@ def binance_rebalance():
         api_key=api_key, api_secret=api_secret, account_name=account_name, target_weights=target_weights)
 
     return json.dumps(result)
+
+
+# TODO secure this endpoint with e.g. JWT token
+@app.route("/persist_all_portfolio_snapshots")
+def persist_all_portfolio_snapshots():
+    users = coinfolio_get_users()
+    binance_persist_all_portfolio_snapshots(database, users)
+    return json.dumps({"status": 200})
 
 
 @app.route("/analytics-tools/correlation-visualizer")
