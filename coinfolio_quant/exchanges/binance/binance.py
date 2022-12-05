@@ -42,9 +42,9 @@ def removeTrailingZerosInString(s):
 # from ...quant_utils import asset_allocation_utils
 
 # from coinfolio_quant.portfolio.rebalancing import create_target_positions, get_total_positions_value, create_liquidations, create_rebalancing_buys
-# a mapping which defines which assets on FTX should be taken as a proxy instrument
-# for any given key (e.g. "XAU" in our system would be implemented with "PAXG" on FTX exchange)
-FTX_ASSET_PROXIES = {"XAU": "PAXG"}
+# a mapping which defines which assets on Binance should be taken as a proxy instrument
+# for any given key (e.g. "XAU" in our system would be implemented with "PAXG" on Binance exchange)
+BINANCE_ASSET_PROXIES = {"XAU": "PAXG"}
 
 
 def get_positionsOLD(api_key, api_secret, account_name):
@@ -174,7 +174,7 @@ def rebalance_portfolio(api_key, api_secret, account_name, target_weights):
 
     # 0. replace tickers with the proxy-tickers for FTX
     target_weights = asset_allocation_utils.insert_assets_proxies(
-        target_weights, FTX_ASSET_PROXIES)
+        target_weights, BINANCE_ASSET_PROXIES)
 
     print("----------------------")
     print("target_weights")
@@ -350,9 +350,7 @@ def rebalance_portfolio(api_key, api_secret, account_name, target_weights):
     execute_rebalancing_buys(rebalancing_buys)
 
 # def get_orders(api_key, api_secret, account_name):
-#     c = FtxClient(api_key=api_key, api_secret=api_secret,
-#                   account_name=account_name)
-#     return c.get_orders()
+    # TODO implement
 
 
 def get_orders_history(api_key, api_secret, account_name):
@@ -397,6 +395,4 @@ def get_orders_history(api_key, api_secret, account_name):
     return orders
 
 # def get_account(api_key, api_secret, account_name):
-#     c = FtxClient(api_key=api_key, api_secret=api_secret,
-#                   account_name=account_name)
-#     return c.get_account()
+    # TODO implement

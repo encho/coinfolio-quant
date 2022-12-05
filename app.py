@@ -15,7 +15,6 @@ import coinfolio_quant.datalake.strategies as strategiesDB
 import coinfolio_quant.datalake.backtest as backtestsDB
 import coinfolio_quant.datalake.analytics_tools as analyticsToolsDB
 import coinfolio_quant.datalake.client_portfolios as clientPortfoliosDB
-# import coinfolio_quant.exchanges.ftx.ftx as ftxWrapper
 import coinfolio_quant.exchanges.binance.binance as Binance
 from coinfolio_quant.exchanges.binance.persist import persist_all_portfolio_snapshots as binance_persist_all_portfolio_snapshots
 import coinfolio_quant.quant_utils.date_utils as date_utils
@@ -161,7 +160,7 @@ def crypto_series():
 
 
 @app.route("/binance/series/portfolio_value")
-def ftx_get_portfolio_value_series():
+def binance_get_portfolio_value_series():
 
     args = request.args
 
