@@ -8,15 +8,18 @@ from cryptocmd import CmcScraper
 import datetime
 import time
 import simplejson
+import urllib
 
 import coinfolio_quant.datalake.market_data as marketDataDB
 import coinfolio_quant.datalake.strategies as strategiesDB
 import coinfolio_quant.datalake.backtest as backtestsDB
 import coinfolio_quant.datalake.analytics_tools as analyticsToolsDB
 import coinfolio_quant.datalake.client_portfolios as clientPortfoliosDB
-import coinfolio_quant.exchanges.ftx.ftx as ftxWrapper
+import coinfolio_quant.exchanges.binance.binance as Binance
+from coinfolio_quant.exchanges.binance.persist import persist_all_portfolio_snapshots as binance_persist_all_portfolio_snapshots
 import coinfolio_quant.quant_utils.date_utils as date_utils
 import coinfolio_quant.quant_utils.series_warnings as series_warnings
+from coinfolio_quant.coinfolio_api.coinfolio_api import get_users as coinfolio_get_users
 
 
 MONGO_CONNECTION_STRING = os.environ["MONGO_CONNECTION_STRING"]
@@ -156,108 +159,8 @@ def crypto_series():
     return result
 
 
-@app.route("/ftx/positions")
-def ftx_get_positions():
-
-    args = request.args
-
-    # TODO we should return error if these query params are not available!
-    api_key = args.get("api_key")
-    api_secret = args.get("api_secret")
-
-    result = ftxWrapper.get_positions(api_key=api_key, api_secret=api_secret)
-
-    return json.dumps(result)
-
-
-@app.route("/ftx/orders")
-def ftx_get_orders():
-
-    args = request.args
-
-    # TODO we should return error if these query params are not available!
-    api_key = args.get("api_key")
-    api_secret = args.get("api_secret")
-
-    result = ftxWrapper.get_orders(api_key=api_key, api_secret=api_secret)
-    return json.dumps(result)
-
-
-@app.route("/ftx/orders/history")
-def ftx_get_orders_history():
-
-    args = request.args
-
-    # TODO we should return error if these query params are not available!
-    api_key = args.get("api_key")
-    api_secret = args.get("api_secret")
-
-    result = ftxWrapper.get_orders_history(
-        api_key=api_key, api_secret=api_secret)
-
-    json_result = json.dumps(result)
-    return json_result
-
-
-@app.route("/ftx/rebalance")
-def ftx_rebalance():
-
-    args = request.args
-
-    # TODO get user id from secure! JWT token and then use the JWT to retrieve api_key, api_secret and strategy_ticker for user from coinfolio js api!!
-
-    # TODO we should return error if these query params are not available!
-    api_key = args.get("api_key")
-    api_secret = args.get("api_secret")
-
-    # QUICK-FIX: this fixture will need to change once we have multiple strategies in the retail app
-    strategy_ticker = "CFBG1"
-
-    strategy_latest_weights = backtestsDB.get_strategy_latest_weights(
-        database, strategy_ticker)
-
-    target_weights = strategy_latest_weights["weights"]
-
-    result = ftxWrapper.rebalance_portfolio(
-        api_key=api_key, api_secret=api_secret, target_weights=target_weights)
-
-    return json.dumps(result)
-
-
-@app.route("/ftx/persist_portfolio_snapshot")
-def ftx_persist_portfolio_snapshot():
-
-    args = request.args
-
-    # TODO we should return error if these query params are not available!
-    api_key = args.get("api_key")
-    api_secret = args.get("api_secret")
-    user_id = args.get("user_id")
-
-    ftx_client = ftxWrapper.FtxClient(api_key=api_key, api_secret=api_secret)
-
-    clientPortfoliosDB.persist_portfolio_snapshot(
-        database=database, ftx_client=ftx_client, client_id=user_id)
-
-    return json.dumps({"status": 200})
-
-
-@app.route("/ftx/series/portfolio_snapshots")
-def ftx_get_portfolio_snapshots():
-
-    args = request.args
-
-    # TODO we should return error if these query params are not available!
-    user_id = args.get("user_id")
-
-    portfolio_snapshots = clientPortfoliosDB.get_portfolio_snapshots(
-        database=database, client_id=user_id)
-
-    return json.dumps(portfolio_snapshots, default=default)
-
-
-@app.route("/ftx/series/portfolio_value")
-def ftx_get_portfolio_value_series():
+@app.route("/binance/series/portfolio_value")
+def binance_get_portfolio_value_series():
 
     args = request.args
 
@@ -268,6 +171,92 @@ def ftx_get_portfolio_value_series():
         database=database, client_id=user_id)
 
     return json.dumps(portfolio_value_series, default=default)
+
+
+@app.route("/binance/positions")
+def binance_get_positions():
+    args = request.args
+
+    # TODO we should return error if these query params are not available!
+    api_key = args.get("api_key")
+    api_secret = args.get("api_secret")
+    account_name = urllib.parse.unquote(args.get("account_name"))
+
+    result = Binance.get_positions(
+        api_key=api_key, api_secret=api_secret, account_name=account_name)
+
+    return json.dumps(result)
+
+
+@app.route("/binance/persist_portfolio_snapshot")
+def binance_persist_portfolio_snapshot():
+
+    args = request.args
+
+    # TODO we should return error if these query params are not available!
+    api_key = args.get("api_key")
+    api_secret = args.get("api_secret")
+    account_name = urllib.parse.unquote(args.get("account_name"))
+    user_id = args.get("user_id")
+
+    positions = Binance.get_positions(
+        api_key=api_key, api_secret=api_secret, account_name=account_name)
+
+    clientPortfoliosDB.persist_portfolio_snapshot(
+        database=database, positions=positions, client_id=user_id)
+
+    return json.dumps({"status": 200})
+
+
+@app.route("/binance/orders/history")
+def binance_get_orders_history():
+
+    args = request.args
+
+    # TODO we should return error if these query params are not available!
+    api_key = args.get("api_key")
+    api_secret = args.get("api_secret")
+    account_name = urllib.parse.unquote(args.get("account_name"))
+
+    result = Binance.get_orders_history(
+        api_key=api_key, api_secret=api_secret, account_name=account_name)
+
+    json_result = json.dumps(result)
+    return json_result
+
+
+@app.route("/binance/rebalance")
+def binance_rebalance():
+
+    args = request.args
+
+    # TODO get user id from secure! JWT token and then use the JWT to retrieve api_key, api_secret and strategy_ticker for user from coinfolio js api!!
+
+    # TODO we should return error if these query params are not available!
+    api_key = args.get("api_key")
+    api_secret = args.get("api_secret")
+    account_name = urllib.parse.unquote(args.get("account_name"))
+
+    # QUICK-FIX: this fixture will need to change once we have multiple strategies in the retail app
+    strategy_ticker = "CFBG1"
+
+    strategy_latest_weights = backtestsDB.get_strategy_latest_weights(
+        database, strategy_ticker)
+
+    target_weights = strategy_latest_weights["weights"]
+
+    result = Binance.rebalance_portfolio(
+        api_key=api_key, api_secret=api_secret, account_name=account_name, target_weights=target_weights)
+
+    return json.dumps(result)
+
+
+# TODO secure this endpoint with e.g. JWT token
+@app.route("/persist_all_portfolio_snapshots")
+def persist_all_portfolio_snapshots():
+    users = coinfolio_get_users()
+    binance_persist_all_portfolio_snapshots(database, users)
+    return json.dumps({"status": 200})
 
 
 @app.route("/analytics-tools/correlation-visualizer")
