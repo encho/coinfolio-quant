@@ -106,7 +106,8 @@ def get_positions(api_key, api_secret, account_name):
     account_coin = "USDT"
 
     # remove account coin from assets
-    assets.remove(account_coin)
+    if account_coin in assets:
+        assets.remove(account_coin)
 
     symbols_for_pricing = [asset + account_coin for asset in assets]
     symbol_prices = client.ticker_price(symbols=symbols_for_pricing)
@@ -197,7 +198,8 @@ def rebalance_portfolio(api_key, api_secret, account_name, target_weights):
     print(total_portfolio_value)
 
     # 2. get current market data list
-    base_quote_pairs = [["ETH", "USDT"], ["BTC", "USDT"], ["PAXG", "USDT"]]
+    base_quote_pairs = [["ETH", "USDT"], ["BTC", "USDT"], [
+        "PAXG", "USDT"], ["EUR", "USDT"], ["BUSD", "USDT"]]
     symbols_for_pricing = [
         base + quote for [base, quote] in base_quote_pairs]
 
