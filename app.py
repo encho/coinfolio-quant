@@ -307,5 +307,48 @@ def analytics_tools_correlation_visualizer():
     return json_result
 
 
+@app.route("/analytics-tools/price-chart")
+def analytics_tools_price_chart():
+
+    args = request.args
+
+    # TODO we should return error if these query params are not available!
+    ticker = args.get("ticker")
+    end_date_iso_string = args.get("endDate")
+    time_period_shift = args.get("timePeriod")
+
+    def timeseries_df_to_json(df):
+        df["date"] = df.index
+        return df.to_json(orient="records")
+
+    end_date = datetime.datetime(
+        *time.strptime(end_date_iso_string, "%Y-%m-%dT%H:%M:%S.%f%z")[:6])
+    start_date = date_utils.get_shifted_date(end_date, time_period_shift)
+
+    data = analyticsToolsDB.get_price_chart_data(
+        database, ticker, start_date=start_date, end_date=end_date)
+
+    series = timeseries_df_to_json(data["series_df"])
+
+    ticker_metadata = marketDataDB.get_metadata(
+        database, ticker)
+
+    # warnings = series_warnings.get_series_warnings(data["series_df"])
+
+    result = {
+        "ticker": ticker,
+        "ticker_metadata": ticker_metadata,
+        "start_date": start_date,
+        "end_date": end_date,
+        "time_period": time_period_shift,
+        "series": series,
+    }
+
+    json_result = simplejson.dumps(result, ignore_nan=True,
+                                   default=datetime.datetime.isoformat)
+
+    return json_result
+
+
 if __name__ == '__main__':
     app.run()

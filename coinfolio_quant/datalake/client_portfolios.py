@@ -69,7 +69,10 @@ def get_portfolio_value_series(database, client_id):
     index_value_list = list(
         map(lambda it: {"index": it["timestamp"], "value": it["usd_value"]}, series_list))
 
+    # 1T => 1 minute frequency
+    # 1H => 1 hour frequency
+    # 1D => 1 calendar day frequency
     resampled_series_list = resample_irregular_timeseries_list(
-        index_value_list, freq="1T")
+        index_value_list, freq="1D")
 
     return resampled_series_list
