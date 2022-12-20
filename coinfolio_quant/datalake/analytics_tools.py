@@ -82,3 +82,18 @@ def get_correlation_visualizer_data(database, first_asset, second_asset, start_d
         "correlation": correlation,
         "series_df": new_df,
     }
+
+
+def get_price_chart_data(database, ticker, start_date, end_date):
+
+    df = get_field_dataframe(
+        database, [ticker], start_date=start_date, end_date=end_date, field="close")
+
+    new_column_names = {}
+    new_column_names[ticker] = "value"
+
+    df = df.rename(columns=new_column_names)
+
+    return {
+        "series_df": df,
+    }
