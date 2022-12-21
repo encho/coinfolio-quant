@@ -92,7 +92,8 @@ def get_field_series(database, ticker, field="close", start_date=None, end_date=
 
         query_object["date"] = date_query
 
-    cursor = market_data_series_collection.find(query_object, return_values)
+    cursor = market_data_series_collection.find(
+        query_object, return_values).sort("date", ASCENDING)
 
     results_list = list(cursor)
 
