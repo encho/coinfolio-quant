@@ -14,8 +14,6 @@ MARKET_DATA_METADATA = [
         "yahoo_ticker": "BTC-USD", "name": "Bitcoin/USD", "type": "CRYPTO", "version": 1},
     {"ticker": "XAU-USD", "base": "XAU", "quote": "USD",
         "yahoo_ticker": "GC=F", "name": "Gold/USD", "type": "COMMODITY", "version": 1},
-    {"ticker": "^DJCI", "base": "DJCI", "quote": "USD",
-        "yahoo_ticker": "^DJCI", "name": "DJ Commodity Index", "type": "COMMODITY", "version": 2},
     {"ticker": "ETH-USD", "base": "ETH", "quote": "USD",
         "yahoo_ticker": "ETH-USD", "name": "Ethereum/USD", "type": "CRYPTO", "version": 1},
     {"ticker": "XRP-USD", "base": "XRP", "quote": "USD",
