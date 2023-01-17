@@ -124,6 +124,12 @@ def get_market_data_metadata_list():
         database)
     return json.dumps(metadata_list, default=default)
 
+@app.route('/market-data/metadata2')
+def get_market_data_metadata_list_2():
+    metadata_list = marketDataDB.get_metadata_list_2(
+        database)
+    return json.dumps(metadata_list, default=default)
+
 
 @app.route('/market-data/overview')
 def get_market_data_overview_list():
