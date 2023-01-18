@@ -53,6 +53,14 @@ def get_overview_list(database):
 
 def get_metadata_list(database):
     market_data_metatdata_collection = database["market_data_metadata"]
+    cursor = market_data_metatdata_collection.find(
+        {"version": 1}, {"_id": False})
+    results_list = list(cursor)
+    return results_list
+
+
+def get_metadata_list_2(database):
+    market_data_metatdata_collection = database["market_data_metadata"]
     cursor = market_data_metatdata_collection.find({}, {"_id": False})
     results_list = list(cursor)
     return results_list
