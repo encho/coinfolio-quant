@@ -94,6 +94,13 @@ def get_price_chart_data(database, ticker, start_date, end_date):
 
     df = df.rename(columns=new_column_names)
 
+
+    # Calculate the percentage change between the first and last values
+    first_value = df['value'].iloc[0]
+    last_value = df['value'].iloc[-1]
+    percentage_change = ((last_value - first_value) / first_value)
+
     return {
         "series_df": df,
+        "percentage_change": percentage_change
     }

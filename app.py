@@ -9,6 +9,7 @@ import datetime
 import time
 import simplejson
 import urllib
+import pandas as pd
 
 import coinfolio_quant.datalake.market_data as marketDataDB
 import coinfolio_quant.datalake.strategies as strategiesDB
@@ -39,7 +40,7 @@ def default(o):
 
 @app.route('/')
 def home():
-    return "Coinfolio Quant API"
+    return "Nerdy.Finance API"
 
 
 @app.route('/strategies')
@@ -397,6 +398,98 @@ def analytics_tools_price_chart():
         "time_period": time_period_shift,
         "series": series,
     }
+
+    json_result = simplejson.dumps(result, ignore_nan=True,
+                                   default=datetime.datetime.isoformat)
+
+    return json_result
+
+
+
+@app.route("/flics/simple-price-chart")
+def flics_simple_price_chart():
+    args = request.args
+
+    # TODO we should return error if these query params are not available!
+    ticker = args.get("ticker")
+    end_date_iso_string = args.get("endDate")
+    time_period_shift = args.get("timePeriod")
+    # print(ticker)
+
+    # def timeseries_df_to_json(df):
+    #     df["date"] = df.index
+    #     return df.to_json(orient="records")
+
+    end_date = datetime.datetime(
+        *time.strptime(end_date_iso_string, "%Y-%m-%dT%H:%M:%S.%f%z")[:6])
+    start_date = date_utils.get_shifted_date(end_date, time_period_shift)
+
+
+    # ticker = "BTC-USD"
+
+    data = analyticsToolsDB.get_price_chart_data(
+        database, ticker,
+        start_date=start_date, 
+        end_date=end_date
+        )
+    
+    # series = timeseries_df_to_json(data["series_df"])
+    df = data["series_df"]
+    df['date'] = pd.to_datetime(df.index)  # Convert 'date' column to DateTime
+
+
+
+    # Get the current year
+    # current_year = datetime.datetime.now().year
+
+    # print(current_year)
+
+    # Filter the DataFrame for year-to-date items
+    # ytd_df = df[df['date'].dt.year == current_year]
+    # ytd_df = df[df.index.dt.year == current_year]
+
+    # monthly_df = ytd_df.resample('M').last()
+    # monthly_df = ytd_df
+    monthly_df = df
+    # Resample the DataFrame to monthly frequency, keeping the first and last value of each month
+    # monthly_df = ytd_df.resample('M').apply({'value': ['first', 'last']})
+
+    # Flatten the MultiIndex columns
+    # monthly_df.columns = ['first_value', 'last_value']
+
+    # df["date"] = df.index
+    # print(monthly_df["series_df"])
+
+    # tsdata  = [{'xxx': index, 'value': value} for index, value in zip(df.index, df['value'])]
+    # tsdata  = [{'datetime': index, 'value': value} for index, value in zip(monthly_df.index, monthly_df['value'])]
+    tsdata  = [{'index': index, 'value': value} for index, value in zip(monthly_df.index, monthly_df['value'])]
+
+
+    # print(tsdata)
+
+
+    ticker_metadata = marketDataDB.get_metadata(
+        database, ticker)
+
+
+    result = {
+        # "ticker": ticker,
+        # "title": 'S&P500 Performance',
+        # "series": data["series_df"],
+        "data": tsdata,
+        # for the title construction
+        "percentage_change": data["percentage_change"],
+        "ticker": ticker,
+        "time_period": time_period_shift,
+        #
+        "ticker_metadata": ticker_metadata,
+        #
+        "title": ticker + ' Performance',
+        "subtitle": 'Prices in USD',
+    }
+
+
+
 
     json_result = simplejson.dumps(result, ignore_nan=True,
                                    default=datetime.datetime.isoformat)

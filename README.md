@@ -1,14 +1,34 @@
 # README
 
-This is the [Flask](http://flask.pocoo.org/) [quick start](http://flask.pocoo.org/docs/1.0/quickstart/#a-minimal-application) example for [Render](https://render.com).
+## Run Locally
 
-The app in this repo is deployed at [https://flask.onrender.com](https://flask.onrender.com).
+Activate the virtual environment:
 
-## Deployment
+```
+source venv/bin/activate
+```
 
-Follow the guide at https://render.com/docs/deploy-flask.
+Run locally:
 
-## Manage Virtual Environment
+```
+(venv) ➜  coinfolio-quant git:(main) COINFOLIO_BASE_URL=https://nerdy.finance FLASK_ENV=development MONGO_CONNECTION_STRING=mongodb://127.0.0.1:27017 python -m app
+```
+
+Note: COINFOLIO_BASE_URL is not used any more, I have for now just put a random url. This needs to be deprecated!
+
+## ETL scripts
+
+### Reset the local database
+
+Load the crypto histories into the database:
+
+```
+MONGO_CONNECTION_STRING=mongodb://127.0.0.1:27017 python ./etl-reset.py
+```
+
+To reset the STAGE or PROD databases, run the above command with the respective MONGO_CONNECTION_STRING environment variable.
+
+## Info: Manage Virtual Environment
 
 Install virtualenv for python 3:
 
@@ -32,28 +52,4 @@ Deactivate the virtual environment:
 
 ```
 deactivate
-```
-
-## Quant API Server
-
-Run locally:
-
-```
-FLASK_ENV=development MONGO_CONNECTION_STRING=<mongo-conn-string> python -m app
-```
-
-## ETL scripts
-
-Load the crypto histories into the database:
-
-```
-MONGO_CONNECTION_STRING=<mongo-conn-string> python ./etl/load_crypto_histories.py
-```
-
-## IPython
-
-Print current working directory from IPython shell:
-
-```
-!pwd
 ```
