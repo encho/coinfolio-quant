@@ -1,4 +1,12 @@
-# README
+# Nerdy.Finance API
+
+## STAGE Deployment
+
+https://coinfolio-quant-stage.onrender.com/
+
+## PROD Deployment
+
+https://coinfolio-quant.onrender.com/
 
 ## Run Locally
 
