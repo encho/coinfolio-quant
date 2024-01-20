@@ -39,15 +39,17 @@ deactivate
 Run locally:
 
 ```
-FLASK_ENV=development MONGO_CONNECTION_STRING=<mongo-conn-string> python -m app
+(venv) ➜  coinfolio-quant git:(main) COINFOLIO_BASE_URL=https://nerdy.finance FLASK_ENV=development MONGO_CONNECTION_STRING=mongodb://127.0.0.1:27017 python -m app
 ```
+
+Note: COINFOLIO_BASE_URL is not used any more, I have for now just put a random url. This needs to be deprecated!
 
 ## ETL scripts
 
 Load the crypto histories into the database:
 
 ```
-MONGO_CONNECTION_STRING=<mongo-conn-string> python ./etl/load_crypto_histories.py
+MONGO_CONNECTION_STRING=mongodb://127.0.0.1:27017 python ./etl-reset.py
 ```
 
 ## IPython
