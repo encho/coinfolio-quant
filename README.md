@@ -1,5 +1,9 @@
 # Nerdy.Finance API
 
+## Github Project
+
+https://github.com/encho/coinfolio-quant
+
 ## STAGE Deployment
 
 https://coinfolio-quant-stage.onrender.com/
@@ -34,7 +38,15 @@ Load the crypto histories into the database:
 MONGO_CONNECTION_STRING=mongodb://127.0.0.1:27017 python ./etl-reset.py
 ```
 
-To reset the STAGE or PROD databases, run the above command with the respective MONGO_CONNECTION_STRING environment variable.
+To reset the STAGE or PROD databases, run the above command with the respective MONGO_CONNECTION_STRING environment variable (see in page https://www.notion.so/Data-API-c70c9202267949a9b28f8632a3fcf0c4)
+
+## Develop the API
+
+Make your changes. Commit them. And push to GitHub. The **STAGE** Environment will get redeployed.
+
+`git push origin dev`
+
+To redeploy the PROD environment simply create a pull request to merge the `dev` branch to the `main` branch on the GitHub Repo.
 
 ## Info: Manage Virtual Environment
 

@@ -71,9 +71,10 @@ def get_backtest_data(database, strategy_ticker, currency, start_date, end_date)
     necessary_tickers = strategiesDB.get_strategy_tickers(
         database=database, ticker=strategy_ticker,
         start_date=start_date, end_date=end_date)
+    
 
-    # return necessary_tickers
-
+    # TODO here we could document better and actually map better, here we assume:
+    # if currency is USD and ticker is BTC, the "asset" is BTC-USD
     cryptocurrency_exchange_rate_tickers = list(
         map(lambda cryptocurrency: cryptocurrency + "-" + currency, necessary_tickers))
 
