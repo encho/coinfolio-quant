@@ -15,6 +15,29 @@ def get_70_30_asset_allocation(date, universe, database):
     return [{"ticker": universe[0], "weight": 0.7}, {"ticker": universe[1], "weight": 0.3}]
 
 
+def get_2_assets_fixed_weights_asset_allocation_fun(weight1, weight2):
+    """
+    Returns a function that provides an asset allocation with the specified weights.
+
+    :param weight1: The weight for the first asset.
+    :param weight2: The weight for the second asset.
+    :return: A function that takes `date`, `universe`, and `database` and returns the asset allocation.
+    """
+    if weight1 + weight2 != 1:
+        raise ValueError("Weights must sum up to 1.")
+
+    def allocation_function(date, universe, database):
+        if len(universe) != 2:
+            raise ValueError("Universe must contain exactly two assets.")
+        return [
+            {"ticker": universe[0], "weight": weight1},
+            {"ticker": universe[1], "weight": weight2}
+        ]
+    
+    return allocation_function
+
+
+
 def get_coinfolio_gold_crypto_asset_allocation(date, universe, database):
     return [{"ticker": ticker, "weight": 0.6 if ticker == "XAU" else 0.4/4} for ticker in universe]
 

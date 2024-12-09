@@ -35,26 +35,26 @@ etl_db_market_data.load_all_series(
 # --------------------------------------------------------------------
 # STRATEGIES
 # --------------------------------------------------------------------
-# print("loading strategies metadata")
-# etl_db_strategy_weights.drop_metadata_collection(DATABASE)
-# etl_db_strategy_weights.insert_metadata_list(DATABASE, STRATEGIES_SPECS)
+print("loading strategies metadata")
+etl_db_strategy_weights.drop_metadata_collection(DATABASE)
+etl_db_strategy_weights.insert_metadata_list(DATABASE, STRATEGIES_SPECS)
 
 
 # --------------------------------------------------------------------
 # STORE STRATEGIES WEIGHTS
 # --------------------------------------------------------------------
-# print("loading strategy weights data")
-# etl_db_strategy_weights.drop_weights_series_collection(DATABASE)
-# etl_db_strategy_weights.load_all_weights_series(
-#     DATABASE, STRATEGIES_SPECS, RESET_START_DATE, RESET_END_DATE)
+print("loading strategy weights data")
+etl_db_strategy_weights.drop_weights_series_collection(DATABASE)
+etl_db_strategy_weights.load_all_weights_series(
+    DATABASE, STRATEGIES_SPECS, RESET_START_DATE, RESET_END_DATE)
 
 
 # --------------------------------------------------------------------
 # STORE STRATEGIES BACKTESTS
 # --------------------------------------------------------------------
-# print("loading strategy backtests data")
-# etl_db_strategy_backtest.drop_backtest_series_collection(DATABASE)
-# etl_db_strategy_backtest.load_all_backtests_into_database_FIRST_RUN(
-#     DATABASE, STRATEGIES_SPECS)
+print("loading strategy backtests data")
+etl_db_strategy_backtest.drop_backtest_series_collection(DATABASE)
+etl_db_strategy_backtest.load_all_backtests_into_database_FIRST_RUN(
+    DATABASE, STRATEGIES_SPECS)
 
 CLIENT.close()

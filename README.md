@@ -38,7 +38,7 @@ Load the crypto histories into the database:
 MONGO_CONNECTION_STRING=mongodb://127.0.0.1:27017 python ./etl-reset.py
 ```
 
-To reset the STAGE or PROD databases, run the above command with the respective MONGO_CONNECTION_STRING environment variable.
+To reset the STAGE or PROD databases, run the above command with the respective MONGO_CONNECTION_STRING environment variable (see in page https://www.notion.so/Data-API-c70c9202267949a9b28f8632a3fcf0c4)
 
 ## Develop the API
 
