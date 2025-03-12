@@ -2,6 +2,7 @@ attrs==22.1.0
 autobahn==22.7.1
 Automat==22.10.0
 autopep8==1.6.0
+beautifulsoup4==4.13.3
 binance-connector==1.18.0
 certifi==2022.5.18.1
 cffi==1.15.1
@@ -14,6 +15,7 @@ cryptography==38.0.3
 dnspython==2.2.1
 Flask==2.1.2
 Flask-Cors==3.0.10
+frozendict==2.4.6
 gunicorn==20.1.0
 hyperlink==21.0.0
 idna==3.3
@@ -26,6 +28,8 @@ MarkupSafe==2.1.1
 multitasking==0.0.10
 numpy==1.22.4
 pandas==1.4.2
+peewee==3.17.9
+platformdirs==4.3.6
 prettyprinter==0.18.0
 progressbar==2.5
 pyasn1==0.4.8
@@ -36,11 +40,12 @@ Pygments==2.12.0
 pymongo==4.1.1
 pyOpenSSL==22.1.0
 python-dateutil==2.8.2
-pytz==2022.1
-requests==2.27.1
+pytz==2025.1
+requests==2.32.3
 service-identity==21.1.0
 simplejson==3.17.6
 six==1.16.0
+soupsieve==2.6
 tablib==3.2.1
 toml==0.10.2
 Twisted==22.10.0
@@ -48,6 +53,6 @@ txaio==22.2.1
 typing_extensions==4.4.0
 urllib3==1.26.9
 Werkzeug==2.1.2
-yfinance==0.1.70
+yfinance==0.2.54
 zipp==3.8.0
 zope.interface==5.5.2

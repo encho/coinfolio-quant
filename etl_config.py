@@ -4,6 +4,8 @@ import etl_utils_strategy_weights_universe as universe
 
 RESET_START_DATE = datetime.date(2014, 9, 17)
 RESET_END_DATE = datetime.date.today() - datetime.timedelta(days=1)
+# RESET_START_DATE = datetime.date(2020, 9, 17)
+# RESET_END_DATE = datetime.date(2022, 9, 17)
 
 UPDATE_START_DATE = datetime.date.today() - datetime.timedelta(days=7)
 UPDATE_END_DATE = datetime.date.today() - datetime.timedelta(days=1)
