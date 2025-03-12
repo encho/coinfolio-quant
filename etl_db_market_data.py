@@ -64,7 +64,10 @@ def fetch_and_store_series(database, market_data_spec, start_date, end_date, ups
     print("starting to load: " + market_data_spec["ticker"])
 
     # download series data
-    df = yf.download(yahoo_ticker, start=start_date, end=end_date)
+    df = yf.download(yahoo_ticker, start=start_date, end=end_date, auto_adjust=False)
+
+    df.columns = df.columns.droplevel(1)
+
 
     # rename columns
     df = df.rename(columns={"Open": "open", "High": "high", "Low": "low", "Close": "close",
